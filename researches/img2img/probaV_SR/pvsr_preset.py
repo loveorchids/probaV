@@ -10,7 +10,7 @@ def GeneralPattern_01(args):
     
     args.output_gpu_id = 1
     args.random_order_load = False
-    args.batch_size_per_gpu = 4
+    args.batch_size_per_gpu = 2
     args.loading_threads = 2
     args.img_channel = 1
     args.curr_epoch = 0
@@ -19,8 +19,9 @@ def GeneralPattern_01(args):
     # original image is 14-bit, but it will be
     # converted to 16-bit during loading
     args.img_bit = 16
+    args.img_std = (0.5, 0.5, 0.5)
 
-    args.finetune = True
+    args.finetune = False
     return args
 
 

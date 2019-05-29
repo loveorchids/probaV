@@ -1,4 +1,4 @@
-import os, glob, random
+import os, glob, random, csv
 import numpy as np
 import torch, cv2
 from torch.utils.data import *
@@ -21,7 +21,13 @@ def load_path_from_folder(args, length, paths, dig_level=0):
             current_folders = sub_folders
             dig_level -= 1
         sub_folders = []
+        csvfile = open(os.path.join(args.path, "probaV", "norm.csv"), 'r')
+        spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+        data = {}
+        for row in spamreader:
+            data.update({row[0]: float(row[1])})
         for _ in current_folders:
+            folder_name = _[_.rfind("/")+1 : ]
             # Low resolution image
             LR = sorted(glob.glob(_ + "/LR*.png"))
             # Mask for low resolution image
@@ -29,7 +35,7 @@ def load_path_from_folder(args, length, paths, dig_level=0):
             assert len(LR) == len(QM)
             HR = os.path.join(_, "HR.png")
             SM = os.path.join(_, "SM.png")
-            sub_folders.append([LR, QM, HR, SM])
+            sub_folders.append([LR, QM, HR, SM, data[folder_name]])
         return sub_folders
     output = []
     if type(paths) is str:
@@ -43,7 +49,7 @@ def load_path_from_folder(args, length, paths, dig_level=0):
 
 def selective_image_loading(args, items, seed, size, pre_process=None, rand_aug=None,
                bbox_loader=None):
-    LR, QM, HR, SM = items
+    LR, QM, HR, SM, norm = items
     if args.n_selected_img == -1:
         # Randomly select n images from LR images
         num_select = random.sample(list(range(len(LR))), random.randint(0, len(LR)))
@@ -66,35 +72,23 @@ def selective_image_loading(args, items, seed, size, pre_process=None, rand_aug=
         selected_LR = [LR[num] for num in num_select]
         selected_QM = [QM[num] for num in num_select]
     datapath = selected_LR + [HR] + selected_QM + [SM]
-    """
-    input_order = []
-    for i in range(args.n_selected_img):
-        input_order.append(i)
-        input_order.append(i + args.n_selected_img + 1)
-    input_order += [args.n_selected_img, 2 * args.n_selected_img + 1]
-    datapath = [datapath[i] for i in input_order]
-    """
     images = omth_loader.read_image(args, datapath, seed, size, pre_process, rand_aug)
-    # Transfer the 8-bit to 14-bit image
-    #for i, image in enumerate(images[args.n_selected_img + 1 :]):
-        # 64=2^6 is the number to transfer from 8-bit to 14-bit
-        #images[args.n_selected_img + 1 + i] =  images[args.n_selected_img + 1 + i].astype(np.uint16) * 64
-    #input_tensor = torch.cat([omth_loader.to_tensor(args, images[i]) for i in input_order])
-    #output_tensor = torch.cat([omth_loader.to_tensor(args, images[i]) for i in output_order])
-    # If args.n_selected_img is 0 or -1, for each batch, the first dimension of
-    # input_tensor is not fixed. Thus we need to use sr_collector to combine
-    # each bach, instead of using PyTorch's default batch collector.
-    return torch.cat(images[:-1]), images[-1]
+    # return blended masked image, blended_target, unblended_target, norm
+    return torch.cat(images[:-2]), images[-2], images[-1], omth_loader.just_return_it(args, norm, 0, 0)
 
 
 def sr_collector(batch):
-    imgs, labels = [], []
+    imgs, labels, masks, norms = [], [], [], []
     for sample in batch:
         imgs.append(sample[0][0])
         labels.append(sample[0][1])
+        masks.append(sample[0][2])
+        norms.append(sample[0][3])
     imgs = torch.stack(imgs, 0)
     labels = torch.stack(labels, 0)
-    return imgs, labels
+    masks = torch.stack(masks, 0)
+    norms = torch.stack(norms, 0)
+    return imgs, labels, masks, norms
 
 
 def fetch_probaV_data(args, sources, auxiliary_info, batch_size, batch_size_val=None,

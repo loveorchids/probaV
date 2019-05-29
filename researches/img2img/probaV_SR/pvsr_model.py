@@ -83,6 +83,10 @@ class ProbaV_basic(nn.Module):
         else:
             return out, y
 
+class ProbaV_SRNTT(nn.Module):
+    def __init__(self):
+        pass
+
 
 if __name__ == "__main__":
     x = torch.randn(2, 10, 128, 128)
