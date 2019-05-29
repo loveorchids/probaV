@@ -46,15 +46,18 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+    if is_train:
+        args.curr_epoch += 1
+    all_losses = [avg(loss) for loss in list(zip(*epoch_loss))]
     if measure:
+        all_measures = [avg(measure) for measure in list(zip(*epoch_measure))]
         print(" --- loss: %.4f, Measure: %.4f, at epoch %04d, cost %.2f seconds ---" %
-              (avg(epoch_loss), avg(epoch_measure), args.curr_epoch + 1, time.time() - start_time))
+              (avg(all_losses), avg(all_measures), args.curr_epoch + 1, time.time() - start_time))
+        return all_losses, all_measures
     else:
         print(" --- loss: %.4f, at epoch %04d, cost %.2f seconds ---" %
               (avg(epoch_loss), args.curr_epoch + 1, time.time() - start_time))
-    if is_train:
-        args.curr_epoch += 1
-    return avg(epoch_loss), avg(epoch_measure)
+        return all_losses
 
 
 def val(args, net, dataset, optimizer, criterion, measure):
