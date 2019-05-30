@@ -39,22 +39,29 @@ class Vgg16BN(nn.Module):
 
 
 class ProbaV_basic(nn.Module):
-    def __init__(self, inchannel=3, BN=nn.BatchNorm2d, group=1, s_MSE=False):
+    def __init__(self, inchannel=3, BN=nn.BatchNorm2d, group=1, s_MSE=False, SA=True):
         super(ProbaV_basic, self).__init__()
         if s_MSE:
             self.evaluator = Vgg16BN()
         else:
             self.evaluator = None
+        self.SA = SA
         self.down_conv1 = block.conv_block(inchannel, [48 * group, 128 * group, 128 * group], kernel_sizes=[3, 3, 1],
-                                           stride=[1, 1, 1], padding=[1, 1, 0], groups=[group] * 3,
+                                           stride=[2, 1, 1], padding=[1, 1, 0], groups=[group] * 3,
                                            name="down_block1", batch_norm=BN)
         self.down_conv2 = block.conv_block(128 * group, [256 * group, 256 * group, 256 * group], kernel_sizes=[3, 3, 1],
                                            stride=[2, 1, 1], padding=[1, 1, 0], groups=[group] * 3, name="down_block2",
                                            batch_norm=BN)
-        self.norm_conv = block.conv_block(256 * group, [512, 512, 512],
-                                          kernel_sizes=[3, 3, 1], stride=[1] * 3, padding=[1, 1, 0],
-                                          groups=[1] * 3, name="norm_conv", batch_norm=BN)
-        self.up_conv1 = block.conv_block(512, [512, 512, 256], kernel_sizes=[5, 3, 3], stride=[3, 1, 1],
+        self.norm_conv1 = block.conv_block(256 * group, [256, 256, 256],
+                                          kernel_sizes=[3, 3, 3], stride=[1] * 3, padding=[1, 1, 0],
+                                          groups=[1] * 3, dilation=[2, 1, 1], name="norm_conv1", batch_norm=BN)
+        if SA:
+            self.self_attn = Self_Attn(256)
+        self.norm_conv2 = block.conv_block(256 , [256, 256],
+                                           kernel_sizes=[3, 1], stride=[1] * 2, padding=[1, 0],
+                                           groups=[1] * 2, name="norm_conv2", batch_norm=BN)
+        
+        self.up_conv1 = block.conv_block(256, [256, 256, 256], kernel_sizes=[5, 3, 3], stride=[3, 1, 1],
                                          padding=[1, 1, 1], groups=[1] * 3, name="up_block1", batch_norm=BN,
                                          transpose=[True, False, False])
         self.up_conv2 = block.conv_block(256, [256, 128, 128], kernel_sizes=[4, 3, 1], stride=[2, 1, 1],
@@ -62,6 +69,7 @@ class ProbaV_basic(nn.Module):
                                          transpose=[True, False, False])
         self.up_conv3 = block.conv_block(128, [128, 48, 24, 1], kernel_sizes=[3, 3, 3, 3], stride=[1, 1, 1, 1],
                                          padding=[1] * 4, groups=[1] * 4, name="up_block3", batch_norm=BN)
+
     
     def forward(self, x, y=None):
         out = self.down_conv1(x)
@@ -70,6 +78,8 @@ class ProbaV_basic(nn.Module):
         # out = self.down_conv4(out)
         # out = self.down_conv5(out)
         out = self.norm_conv(out)
+        if self.SA:
+            out, attn_map = self.self_attn(out)
         out = self.up_conv1(out)
         out = self.up_conv2(out)
         # out = self.up_conv3_sig(out)
@@ -82,6 +92,41 @@ class ProbaV_basic(nn.Module):
             return [out] + s_mse_pred, [y] + s_mse_label
         else:
             return out, y
+
+
+class Self_Attn(nn.Module):
+    """ Self attention Layer"""
+
+    def __init__(self, in_dim):
+        super().__init__()
+        self.query_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim // 8, kernel_size=1)
+        self.key_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim // 8, kernel_size=1)
+        self.value_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim, kernel_size=1)
+        self.gamma = nn.Parameter(torch.zeros(1))
+
+        self.softmax = nn.Softmax(dim=-1)  #
+
+    def forward(self, x):
+        """
+            inputs :
+                x : input feature maps( B X C X W X H)
+            returns :
+                out : self attention value + input feature
+                attention: B X N X N (N is Width*Height)
+        """
+        m_batchsize, C, width, height = x.size()
+        proj_query = self.query_conv(x).view(m_batchsize, -1, width * height).permute(0, 2, 1)  # B X CX(N)
+        proj_key = self.key_conv(x).view(m_batchsize, -1, width * height)  # B X C x (*W*H)
+        energy = torch.bmm(proj_query, proj_key)  # transpose check
+        attention = self.softmax(energy)  # BX (N) X (N)
+        proj_value = self.value_conv(x).view(m_batchsize, -1, width * height)  # B X C X N
+
+        out = torch.bmm(proj_value, attention.permute(0, 2, 1))
+        out = out.view(m_batchsize, C, width, height)
+
+        out = self.gamma * out + x
+        return out, attention
+
 
 class ProbaV_SRNTT(nn.Module):
     def __init__(self):
