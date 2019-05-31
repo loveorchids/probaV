@@ -42,7 +42,7 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
                 pred = vb.plot_tensor(args, prediction[i: i+1, :9], margin=0)
                 gt = vb.plot_tensor(args, blend_target[i: i+1, :9], margin=0)
                 out = np.concatenate([img, pred, gt], axis=1)
-                cv2.imwrite(os.path.join(args.val_log, "epoch_%d_%d.jpg"%(args.curr_epoch + 1, i)), out/ 65536 * 255)
+                cv2.imwrite(os.path.join(args.val_log, "epoch_%d_%d.jpg"%(args.curr_epoch, i)), out/ 65536 * 255)
 
         prediction = [prediction] if type(prediction) not in [list, tuple] else prediction
         blend_target = [blend_target] if type(blend_target) not in [list, tuple] else blend_target
@@ -88,7 +88,8 @@ def main():
         val_Loss, val_Measure = [], []
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
-        net = model.ProbaV_basic(inchannel=args.n_selected_img)
+        net = model.RDN(10, 1, 2, 3)
+        #net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
         if args.finetune:
