@@ -64,11 +64,22 @@ class ProbaV_basic(nn.Module):
         self.up_conv1 = block.conv_block(256, [256, 256, 256], kernel_sizes=[5, 3, 3], stride=[3, 1, 1],
                                          padding=[1, 1, 1], groups=[1] * 3, name="up_block1", batch_norm=BN,
                                          transpose=[True, False, False])
-        self.up_conv2 = block.conv_block(256, [256, 128, 128], kernel_sizes=[4, 3, 1], stride=[2, 1, 1],
-                                         padding=[1, 1, 0], groups=[1] * 3, name="up_block2", batch_norm=BN,
+        self.norm_conv2 = block.conv_block(512, [512, 256, 256], kernel_sizes=[1, 3, 3], stride=[1, 1, 1],
+                                         padding=[0, 1, 1], groups=[1] * 3, name="norm_conv2", batch_norm=BN)
+        self.up_conv2 = block.conv_block(256, [256, 256, 256], kernel_sizes=[4, 3, 3], stride=[2, 1, 1],
+                                         padding=[1, 1, 1], groups=[1] * 3, name="up_block2", batch_norm=BN,
                                          transpose=[True, False, False])
-        self.up_conv3 = block.conv_block(128, [128, 48, 24, 1], kernel_sizes=[3, 3, 3, 3], stride=[1, 1, 1, 1],
-                                         padding=[1] * 4, groups=[1] * 4, name="up_block3", batch_norm=BN)
+        self.norm_conv3 = block.conv_block(256, [256, 128, 128], kernel_sizes=[1, 3, 3], stride=[1, 1, 1],
+                                           padding=[0, 1, 1], groups=[1] * 3, name="norm_conv3", batch_norm=BN)
+        self.up_conv3 = block.conv_block(128, [128, 128, 128], kernel_sizes=[4, 3, 3], stride=[2, 1, 1],
+                                         padding=[1, 1, 1], groups=[1] * 3, name="up_block3", batch_norm=BN,
+                                         transpose=[True, False, False])
+        self.norm_conv4 = block.conv_block(128, [128, 64, 64], kernel_sizes=[1, 3, 3], stride=[1, 1, 1],
+                                           padding=[0, 1, 1], groups=[1] * 3, name="norm_conv4", batch_norm=BN)
+        self.norm_conv5 = block.conv_block(64, [64, 32, 32], kernel_sizes=[1, 3, 3], stride=[1, 1, 1],
+                                           padding=[0, 1, 1], groups=[1] * 3, name="norm_conv5", batch_norm=BN)
+        self.norm_conv6 = block.conv_block(32, [32, 16, 16, 1], kernel_sizes=[1, 3, 3, 1], stride=[1, 1, 1, 1],
+                                           padding=[0, 1, 1, 0], groups=[1] * 4, name="norm_conv6", batch_norm=BN)
 
     
     def forward(self, x, y=None):
@@ -77,13 +88,17 @@ class ProbaV_basic(nn.Module):
         #out = self.down_conv3(out)
         # out = self.down_conv4(out)
         # out = self.down_conv5(out)
-        out = self.norm_conv(out)
+        out = self.norm_conv1(out)
         if self.SA:
             out, attn_map = self.self_attn(out)
         out = self.up_conv1(out)
+        out = self.norm_conv2(out)
         out = self.up_conv2(out)
-        # out = self.up_conv3_sig(out)
+        out = self.norm_conv3(out)
         out = self.up_conv3(out)
+        out = self.norm_conv4(out)
+        out = self.norm_conv5(out)
+        out = self.norm_conv6(out)
         # out = self.sigmoid(out)
         # out = self.up_conv5(out)
         if self.evaluator:
