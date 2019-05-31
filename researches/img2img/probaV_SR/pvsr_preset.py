@@ -26,6 +26,8 @@ def GeneralPattern_01(args):
 
 
 def UniquePattern_01(args):
+    args.model_prefix = "sr"
+    args.model_prefix_finetune = "sr"
     args.train_sources = ["probaV/train"]#, "probaV/train/RED"]
     # Select n images from each folder for train, val and test
     # if this is set to 0 then it means select all of them

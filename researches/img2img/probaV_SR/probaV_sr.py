@@ -1,5 +1,5 @@
 import os, time, sys, math, random, datetime
-sys.path.append(os.path.expanduser("~/Documents/omni_research"))
+sys.path.append(os.path.expanduser("~/Documents/probaV"))
 import numpy as np
 import cv2, torch
 import torch.nn as nn
@@ -17,6 +17,10 @@ args = util.get_args(preset.PRESET)
 TMPJPG = os.path.expanduser("~/Pictures/tmp.jpg")
 
 
+def to_array(lists):
+    return [np.asarray(l) for l in list(zip(*lists))]
+
+
 def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
     def avg(list):
         return sum(list) / len(list)
@@ -24,12 +28,21 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
         net.train()
     else:
         net.eval()
-    aux_loss_importance = 0.5
     epoch_loss, epoch_measure = [], []
     start_time = time.time()
     for batch_idx, (images, blend_target, unblend_target, norm) in enumerate(dataset):
         images, blend_target = images.cuda(), blend_target.cuda()
         prediction, blend_target = net(images, blend_target)
+
+        if batch_idx == 0 and not is_train:
+            # Visualize the image-pairs of the first batch
+            for i in range(images.size(0)):
+                # enumerate through batch
+                img = vb.plot_tensor(args, images[i:i+1, :9].permute(1, 0, 2, 3), margin=0)
+                pred = vb.plot_tensor(args, prediction[i: i+1, :9], margin=0)
+                gt = vb.plot_tensor(args, blend_target[i: i+1, :9], margin=0)
+                out = np.concatenate([img, pred, gt], axis=1)
+                cv2.imwrite(os.path.join(args.val_log, "epoch_%d_%d.jpg"%(args.curr_epoch + 1, i)), out/ 65536 * 255)
 
         prediction = [prediction] if type(prediction) not in [list, tuple] else prediction
         blend_target = [blend_target] if type(blend_target) not in [list, tuple] else blend_target
@@ -47,17 +60,18 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
             loss.backward()
             optimizer.step()
     if is_train:
+        print("")
         args.curr_epoch += 1
     all_losses = [avg(loss) for loss in list(zip(*epoch_loss))]
     if measure:
         all_measures = [avg(measure) for measure in list(zip(*epoch_measure))]
-        print(" --- loss: %.4f, Measure: %.4f, at epoch %04d, cost %.2f seconds ---" %
-              (avg(all_losses), avg(all_measures), args.curr_epoch + 1, time.time() - start_time))
+        print("epoch: %d --- loss: %.4f, Measure: %.4f, cost %.2f seconds ---" %
+              (args.curr_epoch, avg(all_losses), avg(all_measures), time.time() - start_time))
         return all_losses, all_measures
     else:
-        print(" --- loss: %.4f, at epoch %04d, cost %.2f seconds ---" %
-              (avg(epoch_loss), args.curr_epoch + 1, time.time() - start_time))
-        return all_losses
+        print("epoch: %d  --- loss: %.4f, cost %.2f seconds ---" %
+              (args.curr_epoch, avg(epoch_loss), time.time() - start_time))
+        return all_losses, [0]
 
 
 def val(args, net, dataset, optimizer, criterion, measure):
@@ -94,18 +108,16 @@ def main():
                 val_Loss.append(_vl)
                 val_Measure.append(_vm)
 
-            if epoch != 0 and epoch % 10 == 0:
+            if (epoch + 1) % 10 == 0:
                 util.save_model(args, args.curr_epoch, net.state_dict(), prefix=args.model_prefix,
                                 keep_latest=20)
-            if epoch > 5:
-                train_lm = [np.asarray(Loss), np.asarray(Measure)]
-                val_lm = [np.asarray(val_Loss), np.asarray(val_Measure)]
+            if (epoch + 1) > 5:
                 vb.plot_multi_loss_distribution(
-                    multi_line_data=[train_lm, val_lm],
-                    multi_line_labels=[["location", "confidence"], ["Accuracy", "Precision"]],
-                    save_path=args.loss_log, window=5, name=dt + "cv_%d"%(idx+1),
-                    bound=[None, {"low": 0.0, "high": 1.0}],
-                    titles=["Train Loss", "Validation Score"]
+                    multi_line_data=[to_array(Loss) + to_array(val_Loss), to_array(Measure) + to_array(val_Measure)],
+                    multi_line_labels=[["train_loss", "val_loss"], ["train_PSNR", "train_L1", "val_PSNR", "val_L1",]],
+                    save_path=args.loss_log, window=3, name=dt + "cv_%d"%(idx+1),
+                    bound=[None, None],
+                    titles=["Loss", "Measure"]
                 )
         # Clean the data for next cross validation
         del net, optimizer, criterion, measure

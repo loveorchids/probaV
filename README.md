@@ -1,10 +1,10 @@
-# SROIE 2019 Task 1
+# ProbaV
 
 
 ## Installation
-Clone this repo under ~/Documents:
+Clone this repo:
 ```
-git clone --recurse-submodules https://github.com/loveorchids/sroie2019 ~/Documents/sroie2019
+git clone --recurse-submodules https://github.com/loveorchids/probaV ~/Documents/sroie2019
 ```
 
 ## Requirement
@@ -15,31 +15,28 @@ pip install -r requirements.txt
 
 
 ## Prepare Data
-1. Download dataset from SROIE 2019 to PATH_TO_DATASET
-2. Create path ~/Pictures/dataset/ocr/ and move SROIE dataset under it
+1. Download dataset from: https://kelvins.esa.int/proba-v-super-resolution/home/
+2. Create path ~/Pictures/dataset/SR/ and move downloaded dataset under it. <br />
+Right now you under ~/Pictures/dataset/SR/ it should looks like:
 ```
-cd ~/Pictures
-mkdir dataset
-cd dataset
-mkdir ocr
-cd PATH_TO_DATASET
-# rename dataset
-mv PATH_TO_DATASET/DATASET_NAME PATH_TO_DATASET/SROIE2019
-# move dataset
-mv -r PATH_TO_DATASET/SROIE2019 ~/Pictures/dataset/ocr/
+SR
+|--ProbaV
+    |--train
+    |--test
+    |--norm.csv
 ```
 
 ### Training
 ```
 # Run in Terminal
-cd ~/Documents/sroie2019/researches/ocr/textbox
-python3 textbox.py
+cd ~/Documents/probaV/researches/img2img/probaV
+python3 probaV_sr.py
 ```
 
 
 ### Testing
 ```
 # Run in Terminal
-cd ~/Documents/sroie2019/researches/ocr/textbox
-python3 tb_test.py -mpl tb_003_3.py
+cd ~/Documents/probaV/researches/img2img/probaV
+python3 probaV_sr.py --test
 ```
