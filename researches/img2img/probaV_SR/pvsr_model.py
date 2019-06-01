@@ -3,6 +3,95 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models import resnet18, vgg16_bn
 import omni_torch.networks.blocks as block
+import researches.img2img.probaV_SR.pvsr_module as module
+
+
+class Block(nn.Module):
+    def __init__(self,
+                 in_channels, out_channels,
+                 group=1):
+        super(Block, self).__init__()
+        
+        self.b1 = module.ResidualBlock(64, 64)
+        self.b2 = module.ResidualBlock(64, 64)
+        self.b3 = module.ResidualBlock(64, 64)
+        self.c1 = module.BasicBlock(64 * 2, 64, 1, 1, 0)
+        self.c2 = module.BasicBlock(64 * 3, 64, 1, 1, 0)
+        self.c3 = module.BasicBlock(64 * 4, 64, 1, 1, 0)
+    
+    def forward(self, x):
+        c0 = o0 = x
+        
+        b1 = self.b1(o0)
+        c1 = torch.cat([c0, b1], dim=1)
+        o1 = self.c1(c1)
+        
+        b2 = self.b2(o1)
+        c2 = torch.cat([c1, b2], dim=1)
+        o2 = self.c2(c2)
+        
+        b3 = self.b3(o2)
+        c3 = torch.cat([c2, b3], dim=1)
+        o3 = self.c3(c3)
+        
+        return o3
+
+
+class CARN(nn.Module):
+    def __init__(self, inchannel, filters, scale, BN=nn.BatchNorm2d, s_MSE=False):
+        super(CARN, self).__init__()
+        self.scale = scale
+        if s_MSE:
+            self.evaluator = Vgg16BN()
+        else:
+            self.evaluator = None
+        
+        self.sub_mean = module.MeanShift((0.4488, 0.4371, 0.4040), sub=True)
+        self.add_mean = module.MeanShift((0.4488, 0.4371, 0.4040), sub=False)
+        
+        self.entry = nn.Conv2d(inchannel, filters, 3, 1, 1)
+        
+        self.b1 = Block(filters, filters)
+        self.b2 = Block(filters, filters)
+        self.b3 = Block(filters, filters)
+        self.c1 = module.BasicBlock(filters * 2, filters, 1, 1, 0)
+        self.c2 = module.BasicBlock(filters * 3, filters, 1, 1, 0)
+        self.c3 = module.BasicBlock(filters * 4, filters, 1, 1, 0)
+        
+        self.upsample = module.UpsampleBlock(filters, scale=scale)
+        self.exit = nn.Conv2d(filters, 1, 3, 1, 1)
+        self.mae = nn.L1Loss()
+        self.s_mse_loss = nn.MSELoss()
+    
+    def forward(self, x, y):
+        #x = self.sub_mean(x)
+        x = self.entry(x)
+        c0 = o0 = x
+        
+        b1 = self.b1(o0)
+        c1 = torch.cat([c0, b1], dim=1)
+        o1 = self.c1(c1)
+        
+        b2 = self.b2(o1)
+        c2 = torch.cat([c1, b2], dim=1)
+        o2 = self.c2(c2)
+        
+        b3 = self.b3(o2)
+        c3 = torch.cat([c2, b3], dim=1)
+        o3 = self.c3(c3)
+        
+        out = self.upsample(o3)
+        
+        out = self.exit(out)
+        #out = self.add_mean(out)
+        mae = self.mae(out, y).unsqueeze_(0)
+        if self.evaluator:
+            s_mse_pred = self.evaluator(out)
+            s_mse_label = self.evaluator(y)
+            s_mse_loss = sum([self.s_mse_loss(s_pred, s_mse_label[i]) for i, s_pred in enumerate(s_mse_pred)])
+            return out, mae, s_mse_loss.unsqueeze_(0)
+        else:
+            return out, mae, torch.tensor([0])
 
 
 class RDN(nn.Module):
@@ -23,11 +112,14 @@ class RDN(nn.Module):
                                 kernel_size=3, padding=1)
         self.pixelshuffle = nn.PixelShuffle(upscale_factor)
         #self.conv2 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, padding=1)
-        self.norm_conv1 = block.conv_block(filters, [64, 32, 32], kernel_sizes=[1, 3, 3], stride=[1, 1, 1],
-                                           padding=[0, 1, 1], groups=[1] * 3, name="norm_conv1", batch_norm=BN,
+        self.norm_conv1 = block.conv_block(128, [128, 128, 64], kernel_sizes=[3, 1, 3], stride=[1, 1, 1],
+                                           padding=[1, 0, 1], groups=[1] * 3, name="norm_conv1", batch_norm=BN,
                                            activation=None)
-        self.norm_conv2 = block.conv_block(32, [32, 16, 16, 1], kernel_sizes=[1, 3, 3, 3], stride=[1, 1, 1, 1],
-                                           padding=[0, 1, 1, 1], groups=[1] * 4, name="norm_conv2", batch_norm=BN,
+        self.norm_conv2 = block.conv_block(64, [64, 64, 32], kernel_sizes=[3, 1, 3], stride=[1, 1, 1],
+                                           padding=[1, 0, 1], groups=[1] * 3, name="norm_conv2", batch_norm=BN,
+                                           activation=None)
+        self.norm_conv3 = block.conv_block(32, [32, 16, 16, 1], kernel_sizes=[1, 3, 3, 3], stride=[1, 1, 1, 1],
+                                           padding=[0, 1, 1, 1], groups=[1] * 4, name="norm_conv3", batch_norm=BN,
                                            activation=None)
         self.mae = nn.L1Loss()
         self.s_mse_loss = nn.MSELoss()
@@ -48,6 +140,7 @@ class RDN(nn.Module):
         # f_conv2 = self.conv2(f_upscale)
         out = self.norm_conv1(f_upscale)
         out = self.norm_conv2(out)
+        out = self.norm_conv3(out)
         mae = self.mae(out, y).unsqueeze_(0)
         if self.evaluator:
             s_mse_pred = self.evaluator(out)
@@ -104,12 +197,14 @@ class Vgg16BN(nn.Module):
         self.conv_block1.required_grad = False
         self.conv_block2 = nn.Sequential(*net[7:14])
         self.conv_block2.required_grad = False
+        """
         self.conv_block3 = nn.Sequential(*net[14:24])
         self.conv_block3.required_grad = False
         self.conv_block4 = nn.Sequential(*net[24:34])
         self.conv_block4.required_grad = False
         self.conv_block5 = nn.Sequential(*net[34:])
         self.conv_block5.required_grad = False
+        """
     
     def forward(self, x):
         def gram_matrix(x):
@@ -234,14 +329,11 @@ class Self_Attn(nn.Module):
         return out, attention
 
 
-class ProbaV_SRNTT(nn.Module):
-    def __init__(self):
-        pass
-
 
 if __name__ == "__main__":
     x = torch.randn(3, 10, 128, 128)
+    gt = torch.randn(3, 1, 384, 384)
     #net = ProbaV_basic(inchannel=10)
-    net = RDN(10, 1, 2, 3)
-    y, _ = net(x)
+    net = CARN(10, 64, 3)
+    y, _, _ = net(x, gt)
     print(y.shape)

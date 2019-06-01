@@ -84,13 +84,14 @@ def val(args, net, dataset, optimizer, criterion, measure):
 
 def main():
     dt = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")
-    datasets = data.fetch_probaV_data(args, sources=args.train_sources, k_fold=5,
+    datasets = data.fetch_probaV_data(args, sources=args.train_sources, k_fold=1, split_val=0.1,
                                          batch_size=args.batch_size_per_gpu, auxiliary_info=[2, 2])
     for idx, (train_set, val_set) in enumerate(datasets):
         Loss, Measure = [], []
         val_Loss, val_Measure = [], []
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
+        #net = model.CARN(10, 64, 3, s_MSE=True)
         net = model.RDN(10, 2, 3, filters=128, s_MSE=True)
         #net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
@@ -121,7 +122,7 @@ def main():
                     multi_line_labels=[["train_mae", "train_smse", "val_mae", "val_smse"],
                                        ["train_PSNR", "train_L1", "val_PSNR", "val_L1",]],
                     save_path=args.loss_log, window=3, name=dt + "cv_%d"%(idx+1),
-                    bound=[None, None],
+                    bound=[{"low": 0.0, "high": 0.3}, None],
                     titles=["Loss", "Measure"]
                 )
         # Clean the data for next cross validation
