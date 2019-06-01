@@ -6,22 +6,34 @@ import omni_torch.networks.blocks as block
 
 
 class RDN(nn.Module):
-    def __init__(self, channel, growth_rate, rdb_number, upscale_factor):
+    def __init__(self, channel, rdb_number, upscale_factor, BN=nn.BatchNorm2d, s_MSE=False, filters=64):
         super(RDN, self).__init__()
-        self.SFF1 = nn.Conv2d(in_channels=channel, out_channels=64, kernel_size=3, padding=1, stride=1)
-        self.SFF2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1, stride=1)
-        self.RDB1 = RDB(nb_layers=rdb_number, input_dim=64, growth_rate=64)
-        self.RDB2 = RDB(nb_layers=rdb_number, input_dim=64, growth_rate=64)
-        self.RDB3 = RDB(nb_layers=rdb_number, input_dim=64, growth_rate=64)
-        self.GFF1 = nn.Conv2d(in_channels=64 * 3, out_channels=64, kernel_size=1, padding=0)
-        self.GFF2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
-        self.upconv = nn.Conv2d(in_channels=64, out_channels=(64 * upscale_factor * upscale_factor), kernel_size=3,
-                                padding=1)
+        if s_MSE:
+            self.evaluator = Vgg16BN()
+        else:
+            self.evaluator = None
+        self.SFF1 = nn.Conv2d(in_channels=channel, out_channels=filters, kernel_size=3, padding=1, stride=1)
+        self.SFF2 = nn.Conv2d(in_channels=filters, out_channels=filters, kernel_size=3, padding=1, stride=1)
+        self.RDB1 = RDB(nb_layers=rdb_number, input_dim=filters, growth_rate=filters)
+        self.RDB2 = RDB(nb_layers=rdb_number, input_dim=filters, growth_rate=filters)
+        self.RDB3 = RDB(nb_layers=rdb_number, input_dim=filters, growth_rate=filters)
+        self.GFF1 = nn.Conv2d(in_channels=filters * 3, out_channels=filters, kernel_size=1, padding=0)
+        self.GFF2 = nn.Conv2d(in_channels=filters, out_channels=filters, kernel_size=3, padding=1)
+        self.upconv = nn.Conv2d(in_channels=filters, out_channels=(filters * upscale_factor * upscale_factor),
+                                kernel_size=3, padding=1)
         self.pixelshuffle = nn.PixelShuffle(upscale_factor)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, padding=1)
+        #self.conv2 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, padding=1)
+        self.norm_conv1 = block.conv_block(filters, [64, 32, 32], kernel_sizes=[1, 3, 3], stride=[1, 1, 1],
+                                           padding=[0, 1, 1], groups=[1] * 3, name="norm_conv1", batch_norm=BN,
+                                           activation=None)
+        self.norm_conv2 = block.conv_block(32, [32, 16, 16, 1], kernel_sizes=[1, 3, 3, 3], stride=[1, 1, 1, 1],
+                                           padding=[0, 1, 1, 1], groups=[1] * 4, name="norm_conv2", batch_norm=BN,
+                                           activation=None)
+        self.mae = nn.L1Loss()
+        self.s_mse_loss = nn.MSELoss()
         
     
-    def forward(self, x, y=None):
+    def forward(self, x, y):
         f_ = self.SFF1(x)
         f_0 = self.SFF2(f_)
         f_1 = self.RDB1(f_0)
@@ -33,9 +45,18 @@ class RDN(nn.Module):
         f_DF = f_GF + f_
         f_upconv = self.upconv(f_DF)
         f_upscale = self.pixelshuffle(f_upconv)
-        f_conv2 = self.conv2(f_upscale)
-        return f_conv2, y
-
+        # f_conv2 = self.conv2(f_upscale)
+        out = self.norm_conv1(f_upscale)
+        out = self.norm_conv2(out)
+        mae = self.mae(out, y).unsqueeze_(0)
+        if self.evaluator:
+            s_mse_pred = self.evaluator(out)
+            s_mse_label = self.evaluator(y)
+            s_mse_loss = sum([self.s_mse_loss(s_pred, s_mse_label[i]) for i, s_pred in enumerate(s_mse_pred)])
+            return out, mae, s_mse_loss.unsqueeze_(0)
+        else:
+            return out, mae, 0
+        
 
 class BasicBlock(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -100,10 +121,10 @@ class Vgg16BN(nn.Module):
         x = x.repeat(1, 3, 1, 1)
         out1 = self.conv_block1(x)
         out2 = self.conv_block2(out1)
-        out3 = self.conv_block3(out2)
+        #out3 = self.conv_block3(out2)
         # out4 = self.conv_block4(out3)
         # out5 = self.conv_block5(out4)
-        return [out1, out2, out3]  # , out4, out5
+        return [out1, out2]#, out3]  # , out4, out5
         # return out1, gram_matrix(out2), gram_matrix(out3)
 
 

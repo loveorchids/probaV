@@ -32,7 +32,9 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
     start_time = time.time()
     for batch_idx, (images, blend_target, unblend_target, norm) in enumerate(dataset):
         images, blend_target = images.cuda(), blend_target.cuda()
-        prediction, blend_target = net(images, blend_target)
+        prediction, mae, s_mse = net(images, blend_target)
+        mae = torch.sum(mae) / 2
+        s_mse = torch.sum(s_mse) / 2
 
         if batch_idx == 0 and not is_train:
             # Visualize the image-pairs of the first batch
@@ -47,8 +49,9 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
         prediction = [prediction] if type(prediction) not in [list, tuple] else prediction
         blend_target = [blend_target] if type(blend_target) not in [list, tuple] else blend_target
 
-        losses = criterion(prediction, blend_target)
-        losses = [losses] if type(losses) not in [list, tuple] else losses
+        #losses = criterion(prediction, blend_target)
+        #losses = [losses] if type(losses) not in [list, tuple] else losses
+        losses = [mae, s_mse]
         epoch_loss.append([float(loss.data) for loss in losses])
         if measure:
             basic_measure = measure(prediction, blend_target, losses[0])
@@ -88,7 +91,7 @@ def main():
         val_Loss, val_Measure = [], []
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
-        net = model.RDN(10, 1, 2, 3)
+        net = model.RDN(10, 2, 3, filters=128, s_MSE=True)
         #net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
@@ -96,9 +99,9 @@ def main():
             net = util.load_latest_model(args, net, prefix=args.model_prefix_finetune, strict=True)
         optimizer = AdaBound(net.parameters(), lr=args.learning_rate, final_lr=10 * args.learning_rate,
                              weight_decay=args.weight_decay)
-        criterion = ListedLoss(type="l2", reduction="mean")
+        criterion = ListedLoss(type="l1", reduction="mean")
         #criterion = torch.nn.DataParallel(criterion, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
-        measure = MultiMeasure()
+        measure = MultiMeasure(type="l2", reduction="mean")
         #measure = torch.nn.DataParallel(measure, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         for epoch in range(args.epoch_num):
             _l, _m = fit(args, net, train_set, optimizer, criterion, measure, is_train=True)
@@ -115,7 +118,8 @@ def main():
             if (epoch + 1) > 5:
                 vb.plot_multi_loss_distribution(
                     multi_line_data=[to_array(Loss) + to_array(val_Loss), to_array(Measure) + to_array(val_Measure)],
-                    multi_line_labels=[["train_loss", "val_loss"], ["train_PSNR", "train_L1", "val_PSNR", "val_L1",]],
+                    multi_line_labels=[["train_mae", "train_smse", "val_mae", "val_smse"],
+                                       ["train_PSNR", "train_L1", "val_PSNR", "val_L1",]],
                     save_path=args.loss_log, window=3, name=dt + "cv_%d"%(idx+1),
                     bound=[None, None],
                     titles=["Loss", "Measure"]

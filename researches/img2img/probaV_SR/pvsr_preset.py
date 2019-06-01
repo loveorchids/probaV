@@ -8,7 +8,7 @@ def GeneralPattern_01(args):
     args.epoches_per_phase = 1
     args.epoch_num = 300
     
-    args.output_gpu_id = 1
+    args.output_gpu_id = 0
     args.random_order_load = False
     args.batch_size_per_gpu = 2
     args.loading_threads = 2
