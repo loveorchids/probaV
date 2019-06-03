@@ -57,9 +57,9 @@ class MixedLoss(nn.Module):
 
 
 class MultiMeasure(nn.Module):
-    def __init__(self):
+    def __init__(self, type="l1", reduction="mean"):
         super().__init__()
-        self.mae = ListedLoss(type="l1", reduction="mean")
+        self.mae = ListedLoss(type=type, reduction=reduction)
 
     def forward(self, pred, blended_target, MSE, norm=None, coord=None):
         """
