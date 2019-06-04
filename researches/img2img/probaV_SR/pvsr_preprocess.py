@@ -23,7 +23,10 @@ def combine_mask_with_img(images, args, path, seed, size, device=None):
     max_intensity = 2 ** args.img_bit - 1
     # divide by 255, represent normalize the image from 0~1
     #unblended_target = images[args.n_selected_img] * (images[-1] / 255)
-    middle_idx = int((len(images) - 2) / 2)
+    if args.train:
+        middle_idx = int((len(images) - 2) / 2)
+    else:
+        middle_idx = int((len(images)) / 2)
     # get the sum of masked input image, exclude ground truth image
     mask_sum = [np.sum(mask <= 10) for mask in images[middle_idx+1:-1]]
     mask_sum_idx = list(range(middle_idx))
@@ -34,9 +37,11 @@ def combine_mask_with_img(images, args, path, seed, size, device=None):
     else:
         mask_sum_idx = mask_sum_idx[:args.n_selected_img]
     # append the ground truth image
-    mask_sum_idx.append(middle_idx)
+    if args.train:
+        mask_sum_idx.append(middle_idx)
+        middle_idx += 1
     
-    blend_mask = [np.clip(blur_seq.augment_image(images[middle_idx+1+idx]), a_min=0, a_max=255) / 255
+    blend_mask = [np.clip(blur_seq.augment_image(images[middle_idx+idx]), a_min=0, a_max=255) / 255
                   for idx in mask_sum_idx]
     # The reason we cannot use np.clip is that sometimes the original image pixel intensity
     # may exceed 16384, although they claimed their image is 14-bit
@@ -44,21 +49,21 @@ def combine_mask_with_img(images, args, path, seed, size, device=None):
                 for idx in mask_sum_idx]
     #aug_imgs = [aug_seq.augment_image(((image - np.min(image)) / (np.max(image) - np.min(image)) * max_intensity)\
                                       #.astype(np.uint16)) for image in images[:args.n_selected_img+1]]
-    unblended_target = aug_imgs[-1] * (images[-1] / 255)
     blended_images = []
     for i, image in enumerate(aug_imgs):
         weight = random.uniform(0.1, 0.4)
         # divide by 4, represent convert 16-bit image back to 14-bit image, but save as 16-bit
         blended_images.append(image * (blend_mask[i] * (1 - weight)) + image * (1 - (blend_mask[i] * weight)))
     # append the unblended ground truth
-    blended_images.append(unblended_target)
+    if args.train:
+        blended_images.append(aug_imgs[-1] * (images[-1] / 255))
     #blended_images = [np.clip(img, a_min=0, a_max=max_intensity) for img in blended_images]
     blended_images = [(img - np.min(img)) / (np.max(img) - np.min(img)) * max_intensity for img in blended_images]
     #save_img(blended_images, blend_mask)
-    assert len(blended_images) == args.n_selected_img + 2
     return blended_images
 
 
+#---------------DEBUG CODE----------------
 def save_img(imgs, blend_mask, max=65535):
     mask = imgs[-1]
     gt = imgs[-2]

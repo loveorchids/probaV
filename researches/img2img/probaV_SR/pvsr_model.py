@@ -112,6 +112,8 @@ class RDN(nn.Module):
                                 kernel_size=3, padding=1)
         self.pixelshuffle = nn.PixelShuffle(upscale_factor)
         #self.conv2 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, padding=1)
+        self.trellis = module.Trellis_Structure(filters=filters)
+        """
         self.norm_conv1 = block.conv_block(128, [128, 128, 64], kernel_sizes=[3, 1, 3], stride=[1, 1, 1],
                                            padding=[1, 0, 1], groups=[1] * 3, name="norm_conv1", batch_norm=BN,
                                            activation=None)
@@ -121,6 +123,7 @@ class RDN(nn.Module):
         self.norm_conv3 = block.conv_block(32, [32, 16, 16, 1], kernel_sizes=[1, 3, 3, 3], stride=[1, 1, 1, 1],
                                            padding=[0, 1, 1, 1], groups=[1] * 4, name="norm_conv3", batch_norm=BN,
                                            activation=None)
+                                           """
         self.mae = nn.L1Loss()
         self.s_mse_loss = nn.MSELoss()
         
@@ -138,17 +141,22 @@ class RDN(nn.Module):
         f_upconv = self.upconv(f_DF)
         f_upscale = self.pixelshuffle(f_upconv)
         # f_conv2 = self.conv2(f_upscale)
+        results = self.trellis(f_upscale)
+        out = results[-1]
+        mae = sum([self.mae(result, y) for result in results]).unsqueeze_(0)
+        """
         out = self.norm_conv1(f_upscale)
         out = self.norm_conv2(out)
         out = self.norm_conv3(out)
         mae = self.mae(out, y).unsqueeze_(0)
+        """
         if self.evaluator:
             s_mse_pred = self.evaluator(out)
             s_mse_label = self.evaluator(y)
             s_mse_loss = sum([self.s_mse_loss(s_pred, s_mse_label[i]) for i, s_pred in enumerate(s_mse_pred)])
             return out, mae, s_mse_loss.unsqueeze_(0)
         else:
-            return out, mae, 0
+            return out, mae, torch.tensor([0])
         
 
 class BasicBlock(nn.Module):
@@ -332,8 +340,10 @@ class Self_Attn(nn.Module):
 
 if __name__ == "__main__":
     x = torch.randn(3, 10, 128, 128)
-    gt = torch.randn(3, 1, 384, 384)
+    gt = torch.randn(3, 64, 384, 384)
+    
     #net = ProbaV_basic(inchannel=10)
-    net = CARN(10, 64, 3)
-    y, _, _ = net(x, gt)
+    net = module.Trellis_Structure()
+    #net = CARN(10, 64, 3)
+    y = net(gt)
     print(y.shape)
