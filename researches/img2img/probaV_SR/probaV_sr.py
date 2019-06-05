@@ -86,16 +86,17 @@ def test():
     args.train = False
     dataset = data.fetch_probaV_data(args, sources=args.test_sources, shuffle=False,
                                       batch_size=1 / torch.cuda.device_count(), auxiliary_info=[2, 2])[0][0]
-    net = model.RDN(args.n_selected_img, 1, 3, filters=64, s_MSE=True)
-    net = torch.nn.DataParallel(net, device_ids=[1], output_device=1).cuda()
+    net = model.RDN(args.n_selected_img, 2, 3, filters=64, s_MSE=True)
+    net = torch.nn.DataParallel(net, device_ids=[0], output_device=0).cuda()
     torch.backends.cudnn.benchmark = True
     net = util.load_latest_model(args, net, prefix=args.model_prefix_finetune, strict=True)
     with torch.no_grad():
         for batch_idx, (images, blend_target, unblend_target, norm) in enumerate(dataset):
-            images, blend_target = images.cuda(), blend_target.cuda()
-            prediction, mae, s_mse = net(images, blend_target)
+            print(batch_idx)
+            images, blend_target = images.cuda(), blend_target.cuda(),
+            prediction, mae, s_mse = net(images, blend_target, train=False)
             pred = vb.plot_tensor(args, prediction, margin=0)
-            cv2.imwrite(os.path.expanduser("~/Pictures/result/%s.jpg"%str(batch_idx).zfill(4)), pred)
+            cv2.imwrite(os.path.expanduser("~/Pictures/result/%s.jpg"%str(batch_idx).zfill(4)), pred/ 65536 * 255)
             
             
 
@@ -110,7 +111,7 @@ def main():
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
         #net = model.CARN(10, 64, 3, s_MSE=True)
-        net = model.RDN(args.n_selected_img, 3, 3, filters=96, s_MSE=True)
+        net = model.RDN(args.n_selected_img, 2, 3, filters=64, s_MSE=True)
         #net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
@@ -148,5 +149,5 @@ def main():
         args.curr_epoch = 0
 
 if __name__ == "__main__":
-    main()
+    #main()
     test()

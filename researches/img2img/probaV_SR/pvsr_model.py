@@ -97,7 +97,7 @@ class RDN(nn.Module):
         self.s_mse_loss = nn.MSELoss()
         
     
-    def forward(self, x, y):
+    def forward(self, x, y, train=True):
         f_ = self.SFF1(x)
         f_0 = self.SFF2(f_)
         f_1 = self.RDB1(f_0)
@@ -112,20 +112,23 @@ class RDN(nn.Module):
         # f_conv2 = self.conv2(f_upscale)
         results = self.trellis(f_upscale)
         out = results[-1]
-        mae = sum([self.mae(result, y) for result in results]).unsqueeze_(0)
-        """
-        out = self.norm_conv1(f_upscale)
-        out = self.norm_conv2(out)
-        out = self.norm_conv3(out)
-        mae = self.mae(out, y).unsqueeze_(0)
-        """
-        if self.evaluator:
-            s_mse_pred = self.evaluator(out)
-            s_mse_label = self.evaluator(y)
-            s_mse_loss = sum([self.s_mse_loss(s_pred, s_mse_label[i]) for i, s_pred in enumerate(s_mse_pred)])
-            return out, mae, s_mse_loss.unsqueeze_(0)
+        if train:
+            mae = sum([self.mae(result, y) for result in results]).unsqueeze_(0)
+            """
+            out = self.norm_conv1(f_upscale)
+            out = self.norm_conv2(out)
+            out = self.norm_conv3(out)
+            mae = self.mae(out, y).unsqueeze_(0)
+            """
+            if self.evaluator:
+                s_mse_pred = self.evaluator(out)
+                s_mse_label = self.evaluator(y)
+                s_mse_loss = sum([self.s_mse_loss(s_pred, s_mse_label[i]) for i, s_pred in enumerate(s_mse_pred)])
+                return out, mae, s_mse_loss.unsqueeze_(0)
+            else:
+                return out, mae, torch.tensor([0])
         else:
-            return out, mae, torch.tensor([0])
+            return out, 0, 0
         
 
 class BasicBlock(nn.Module):

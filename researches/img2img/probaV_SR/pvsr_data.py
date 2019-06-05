@@ -79,7 +79,10 @@ def selective_image_loading(args, items, seed, size, pre_process=None, rand_aug=
         datapath = LR + QM
     images = omth_loader.read_image(args, datapath, seed, size, pre_process, rand_aug)
     # return blended masked image, blended_target, unblended_target, norm
-    return torch.cat(images[:-2]), images[-2], images[-1], omth_loader.just_return_it(args, norm, 0, 0)
+    if args.train:
+        return torch.cat(images[:-2]), images[-2], images[-1], omth_loader.just_return_it(args, norm, 0, 0)
+    else:
+        return torch.cat(images), torch.tensor([0]), torch.tensor([0]), torch.tensor([0])
 
 
 def sr_collector(batch):
