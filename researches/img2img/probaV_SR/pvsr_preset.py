@@ -11,7 +11,7 @@ def GeneralPattern_01(args):
     
     args.output_gpu_id = 0
     args.random_order_load = False
-    args.batch_size_per_gpu = 4
+    args.batch_size_per_gpu = 2
     args.loading_threads = 2
     args.img_channel = 1
     args.curr_epoch = 0

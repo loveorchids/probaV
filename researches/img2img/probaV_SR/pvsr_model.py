@@ -6,37 +6,6 @@ import omni_torch.networks.blocks as block
 import researches.img2img.probaV_SR.pvsr_module as module
 
 
-class Block(nn.Module):
-    def __init__(self,
-                 in_channels, out_channels,
-                 group=1):
-        super(Block, self).__init__()
-        
-        self.b1 = module.ResidualBlock(64, 64)
-        self.b2 = module.ResidualBlock(64, 64)
-        self.b3 = module.ResidualBlock(64, 64)
-        self.c1 = module.BasicBlock(64 * 2, 64, 1, 1, 0)
-        self.c2 = module.BasicBlock(64 * 3, 64, 1, 1, 0)
-        self.c3 = module.BasicBlock(64 * 4, 64, 1, 1, 0)
-    
-    def forward(self, x):
-        c0 = o0 = x
-        
-        b1 = self.b1(o0)
-        c1 = torch.cat([c0, b1], dim=1)
-        o1 = self.c1(c1)
-        
-        b2 = self.b2(o1)
-        c2 = torch.cat([c1, b2], dim=1)
-        o2 = self.c2(c2)
-        
-        b3 = self.b3(o2)
-        c3 = torch.cat([c2, b3], dim=1)
-        o3 = self.c3(c3)
-        
-        return o3
-
-
 class CARN(nn.Module):
     def __init__(self, inchannel, filters, scale, BN=nn.BatchNorm2d, s_MSE=False):
         super(CARN, self).__init__()
@@ -51,9 +20,9 @@ class CARN(nn.Module):
         
         self.entry = nn.Conv2d(inchannel, filters, 3, 1, 1)
         
-        self.b1 = Block(filters, filters)
-        self.b2 = Block(filters, filters)
-        self.b3 = Block(filters, filters)
+        self.b1 = module.CarnBlock(filters, filters)
+        self.b2 = module.CarnBlock(filters, filters)
+        self.b3 = module.CarnBlock(filters, filters)
         self.c1 = module.BasicBlock(filters * 2, filters, 1, 1, 0)
         self.c2 = module.BasicBlock(filters * 3, filters, 1, 1, 0)
         self.c3 = module.BasicBlock(filters * 4, filters, 1, 1, 0)
@@ -112,7 +81,7 @@ class RDN(nn.Module):
                                 kernel_size=3, padding=1)
         self.pixelshuffle = nn.PixelShuffle(upscale_factor)
         #self.conv2 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, padding=1)
-        self.trellis = module.Trellis_Structure(filters=filters)
+        self.trellis = module.Trellis_Structure(filters=filters, depth=4)
         """
         self.norm_conv1 = block.conv_block(128, [128, 128, 64], kernel_sizes=[3, 1, 3], stride=[1, 1, 1],
                                            padding=[1, 0, 1], groups=[1] * 3, name="norm_conv1", batch_norm=BN,

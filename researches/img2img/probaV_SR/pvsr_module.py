@@ -45,8 +45,8 @@ class Trellis_Submodule(nn.Module):
             else:
                 filter = filters
             self.sub_module.append(
-                block.conv_block(in_channel, filters=filter, kernel_sizes=3, stride=1,
-                                 padding=1, activation=activation)
+                block.conv_block(in_channel, filters=[filter, filter], kernel_sizes=[3, 1], stride=[1, 1],
+                                 padding=[1, 0], activation=activation)
             )
             
     def forward(self, input, first_line=False):
@@ -65,6 +65,30 @@ class Trellis_Submodule(nn.Module):
 
 def init_weights(modules):
     pass
+
+
+class RDB(nn.Module):
+    def __init__(self, nb_layers, input_dim, growth_rate):
+        super(RDB, self).__init__()
+        self.ID = input_dim
+        self.GR = growth_rate
+        self.layer = self._make_layer(nb_layers, input_dim, growth_rate)
+        self.conv1x1 = nn.Conv2d(in_channels=input_dim + nb_layers * growth_rate,
+                                 out_channels=growth_rate,
+                                 kernel_size=1,
+                                 stride=1,
+                                 padding=0)
+
+    def _make_layer(self, nb_layers, input_dim, growth_rate):
+        layers = []
+        for i in range(nb_layers):
+            layers.append(BasicBlock(input_dim + i * growth_rate, growth_rate))
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        out = self.layer(x)
+        out = self.conv1x1(out)
+        return out + x
 
 
 class MeanShift(nn.Module):
@@ -87,6 +111,36 @@ class MeanShift(nn.Module):
     def forward(self, x):
         x = self.shifter(x)
         return x
+
+
+class CarnBlock(nn.Module):
+    def __init__(self,
+                 in_channels, out_channels,
+                 group=1):
+        super(CarnBlock, self).__init__()
+
+        self.b1 = ResidualBlock(64, 64)
+        self.b2 = ResidualBlock(64, 64)
+        self.b3 = ResidualBlock(64, 64)
+        self.c1 = BasicBlock(64 * 2, 64, 1, 1, 0)
+        self.c2 = BasicBlock(64 * 3, 64, 1, 1, 0)
+        self.c3 = BasicBlock(64 * 4, 64, 1, 1, 0)
+
+    def forward(self, x):
+        c0 = o0 = x
+
+        b1 = self.b1(o0)
+        c1 = torch.cat([c0, b1], dim=1)
+        o1 = self.c1(c1)
+
+        b2 = self.b2(o1)
+        c2 = torch.cat([c1, b2], dim=1)
+        o2 = self.c2(c2)
+
+        b3 = self.b3(o2)
+        c3 = torch.cat([c2, b3], dim=1)
+        o3 = self.c3(c3)
+        return o3
 
 
 class BasicBlock(nn.Module):

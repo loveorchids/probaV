@@ -110,7 +110,7 @@ def main():
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
         #net = model.CARN(10, 64, 3, s_MSE=True)
-        net = model.RDN(args.n_selected_img, 1, 3, filters=64, s_MSE=True)
+        net = model.RDN(args.n_selected_img, 3, 3, filters=96, s_MSE=True)
         #net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
@@ -148,5 +148,5 @@ def main():
         args.curr_epoch = 0
 
 if __name__ == "__main__":
+    main()
     test()
-    #main()
