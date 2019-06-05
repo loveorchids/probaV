@@ -40,10 +40,10 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
             # Visualize the image-pairs of the first batch
             for i in range(images.size(0)):
                 # enumerate through batch
-                img = vb.plot_tensor(args, images[i:i+1, :9].permute(1, 0, 2, 3), margin=0)
+                #img = vb.plot_tensor(args, images[i:i+1, :].permute(1, 0, 2, 3), margin=0)
                 pred = vb.plot_tensor(args, prediction[i: i+1, :9], margin=0)
                 gt = vb.plot_tensor(args, blend_target[i: i+1, :9], margin=0)
-                out = np.concatenate([img, pred, gt], axis=1)
+                out = np.concatenate([pred, gt], axis=1)
                 cv2.imwrite(os.path.join(args.val_log, "epoch_%d_%d.jpg"%(args.curr_epoch, i)), out/ 65536 * 255)
 
         prediction = [prediction] if type(prediction) not in [list, tuple] else prediction
@@ -80,6 +80,24 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
 def val(args, net, dataset, optimizer, criterion, measure):
     with torch.no_grad():
         return fit(args, net, dataset, optimizer, criterion, measure, False)
+    
+    
+def test():
+    args.train = False
+    dataset = data.fetch_probaV_data(args, sources=args.test_sources, shuffle=False,
+                                      batch_size=1 / torch.cuda.device_count(), auxiliary_info=[2, 2])[0][0]
+    net = model.RDN(args.n_selected_img, 1, 3, filters=64, s_MSE=True)
+    net = torch.nn.DataParallel(net, device_ids=[1], output_device=1).cuda()
+    torch.backends.cudnn.benchmark = True
+    net = util.load_latest_model(args, net, prefix=args.model_prefix_finetune, strict=True)
+    with torch.no_grad():
+        for batch_idx, (images, blend_target, unblend_target, norm) in enumerate(dataset):
+            images, blend_target = images.cuda(), blend_target.cuda()
+            prediction, mae, s_mse = net(images, blend_target)
+            pred = vb.plot_tensor(args, prediction, margin=0)
+            cv2.imwrite(os.path.expanduser("~/Pictures/result/%s.jpg"%str(batch_idx).zfill(4)), pred)
+            
+            
 
 
 def main():
@@ -92,7 +110,7 @@ def main():
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
         #net = model.CARN(10, 64, 3, s_MSE=True)
-        net = model.RDN(10, 2, 3, filters=128, s_MSE=True)
+        net = model.RDN(args.n_selected_img, 1, 3, filters=64, s_MSE=True)
         #net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
@@ -130,4 +148,5 @@ def main():
         args.curr_epoch = 0
 
 if __name__ == "__main__":
-    main()
+    test()
+    #main()

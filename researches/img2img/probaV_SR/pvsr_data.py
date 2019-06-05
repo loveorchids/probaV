@@ -73,7 +73,10 @@ def selective_image_loading(args, items, seed, size, pre_process=None, rand_aug=
         selected_LR = [LR[num] for num in num_select]
         selected_QM = [QM[num] for num in num_select]
     """
-    datapath = LR + [HR] + QM + [SM]
+    if args.train:
+        datapath = LR + [HR] + QM + [SM]
+    else:
+        datapath = LR + QM
     images = omth_loader.read_image(args, datapath, seed, size, pre_process, rand_aug)
     # return blended masked image, blended_target, unblended_target, norm
     return torch.cat(images[:-2]), images[-2], images[-1], omth_loader.just_return_it(args, norm, 0, 0)
@@ -97,7 +100,7 @@ def fetch_probaV_data(args, sources, auxiliary_info, batch_size, batch_size_val=
                          shuffle=True, split_val=0.0, k_fold=1, pre_process=None, aug=None):
     args.loading_threads = round(args.loading_threads * torch.cuda.device_count())
     args.loading_threads = 0
-    batch_size = batch_size * torch.cuda.device_count()
+    batch_size = round(batch_size * torch.cuda.device_count())
     if batch_size_val is None:
         batch_size_val = batch_size
     else:

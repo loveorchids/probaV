@@ -3,7 +3,65 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
+import omni_torch.networks.blocks as block
 
+
+class Trellis_Structure(nn.Module):
+    def __init__(self, depth=4, filters=64, activation=nn.CELU()):
+        super().__init__()
+        self.depth = depth
+        self.total_blocks = sum(range(depth + 1))
+        self.trellis_blocks = nn.ModuleList()
+        for i in range(depth, 0, -1):
+            if i == depth:
+                in_channel = filters
+                final_inchannel = filters
+            else:
+                in_channel = filters * 2
+                final_inchannel = filters + 1
+            sub_module = Trellis_Submodule(in_channel, filters, final_inchannel, activation, depth=i)
+            self.trellis_blocks.append(sub_module)
+        
+    def forward(self, x):
+        result = []
+        for i, block in enumerate(self.trellis_blocks):
+            if i == 0:
+                x = block(x, first_line=True)
+                result.append(x[-1])
+            else:
+                x = block(x)
+                result.append(x[-1])
+        return result
+        
+
+class Trellis_Submodule(nn.Module):
+    def __init__(self, in_channel, filters, final_inchannel, activation, depth):
+        super().__init__()
+        self.sub_module = nn.ModuleList([])
+        for _ in range(depth):
+            if _ == depth - 1:
+                filter = 1
+                in_channel = final_inchannel
+            else:
+                filter = filters
+            self.sub_module.append(
+                block.conv_block(in_channel, filters=filter, kernel_sizes=3, stride=1,
+                                 padding=1, activation=activation)
+            )
+            
+    def forward(self, input, first_line=False):
+        result = []
+        if first_line:
+            for module in self.sub_module:
+                input = module(input)
+                result.append(input)
+        else:
+            assert len(input) == len(self.sub_module) + 1
+            for i, module in enumerate(self.sub_module):
+                _input = torch.cat((input[i], input[i + 1]), dim=1)
+                result.append(module(_input))
+        return result
+        
 
 def init_weights(modules):
     pass
