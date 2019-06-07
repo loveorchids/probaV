@@ -10,8 +10,7 @@ import researches.img2img.probaV_SR.pvsr_data as data
 import researches.img2img.probaV_SR.pvsr_preset as preset
 import researches.img2img.probaV_SR.pvsr_model as model
 from researches.img2img.probaV_SR.pvsr_loss import *
-from researches.img2img.probaV_SR.pvsr_args import parse_arg
-import researches.img2img.probaV_SR as init
+
 
 args = util.get_args(preset.PRESET)
 TMPJPG = os.path.expanduser("~/Pictures/tmp.jpg")
@@ -86,7 +85,7 @@ def test():
     args.train = False
     dataset = data.fetch_probaV_data(args, sources=args.test_sources, shuffle=False,
                                       batch_size=1 / torch.cuda.device_count(), auxiliary_info=[2, 2])[0][0]
-    net = model.RDN(args.n_selected_img, 2, 3, filters=64, s_MSE=True)
+    net = model.RDN(args.n_selected_img, 3, 3, filters=96, s_MSE=True)
     net = torch.nn.DataParallel(net, device_ids=[0], output_device=0).cuda()
     torch.backends.cudnn.benchmark = True
     net = util.load_latest_model(args, net, prefix=args.model_prefix_finetune, strict=True)
@@ -111,7 +110,7 @@ def main():
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
         #net = model.CARN(10, 64, 3, s_MSE=True)
-        net = model.RDN(args.n_selected_img, 2, 3, filters=64, s_MSE=True)
+        net = model.RDN(args.n_selected_img, 3, 3, filters=96, s_MSE=True)
         #net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
@@ -149,5 +148,5 @@ def main():
         args.curr_epoch = 0
 
 if __name__ == "__main__":
-    #main()
+    main()
     test()

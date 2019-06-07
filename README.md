@@ -26,17 +26,42 @@ SR
     |--norm.csv
 ```
 
-### Training
+### Training and Testing
+Training, validation and test code are in one file. For each run, 
+the program will split the train set into a training set and a validation set in a 9:1 proportion. 
+And conduct 100 (default setting) training epoch, after each epoch validation will be performed to see
+if the model is overfitted or not.
+Finally, after training is completed, the model will test itself on the test set. <br />
 ```
-# Run in Terminal
 cd ~/Documents/probaV/researches/img2img/probaV
 python3 probaV_sr.py
 ```
-
-
-### Testing
+When you start training, it will create a folder (name is probaV_exp) under: ~/Pictures/dataset/SR/<br />
+Under this folder, there is
 ```
-# Run in Terminal
-cd ~/Documents/probaV/researches/img2img/probaV
-python3 probaV_sr.py --test
+SR
+|--ProbaV_exp
+    |--grad  (discarded in this project)
+    |--log  (discarded in this project)
+    |--loss  (visualize the change of loss for every experiment)
+    |--val  (validation result will be visualized here)
+    |--%s_epoch_%d.pth  (%s: model's specific name assigned by user. %d: epoch number)
+    |--%s_epoch_%d.pth  (%s: model's specific name assigned by user. %d: epoch number)
+    |--%s_epoch_%d.pth  (%s: model's specific name assigned by user. %d: epoch number)
+    |-- ......
+```
+
+
+### Code arrangement
+under folder researches/img2img/probaV, the code arrangement is like below:
+```
+probaV_sr.py: the main program
+pvsr_args.py: 
+pvsr_augment.py: discarded, 
+pvsr_data.py: 
+pvsr_loss.py: 
+pvsr_model.py: 
+pvsr_module.py: 
+pvsr_preprocess.py: 
+pvsr_preset.py: 
 ```

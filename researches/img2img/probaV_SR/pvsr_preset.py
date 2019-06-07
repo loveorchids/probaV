@@ -7,7 +7,7 @@ def GeneralPattern_01(args):
     args.deterministic_train = False
     args.learning_rate = 1e-4
     args.epoches_per_phase = 1
-    args.epoch_num = 300
+    args.epoch_num = 100
     
     args.output_gpu_id = 0
     args.random_order_load = False
