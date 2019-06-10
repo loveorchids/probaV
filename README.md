@@ -13,9 +13,8 @@ Python:  3.5.2 or higher
 pip install -r requirements.txt
 ```
 
-
 ## Prepare Data
-1. Download dataset from: https://kelvins.esa.int/proba-v-super-resolution/home/
+1. [Download](https://kelvins.esa.int/proba-v-super-resolution/home/) dataset. 
 2. Create path ```~/Pictures/dataset/SR/``` and move downloaded dataset under this folder. <br />
 So under your ```~/Pictures/dataset/SR/``` folder it should looks like:
 ```
@@ -25,6 +24,16 @@ SR
     |--test
     |--norm.csv
 ```
+
+### Table of Contents
+- <a href='### Training and Testing'>Training and Testing</a>
+- <a href='### Code Arrangement'>Code Arrangement</a>
+- <a href='#training-ssd'>Train</a>
+- <a href='#evaluation'>Evaluate</a>
+- <a href='#performance'>Performance</a>
+- <a href='#demos'>Demos</a>
+- <a href='#todo'>Future Work</a>
+- <a href='#references'>Reference</a>
 
 ### Training and Testing
 Training, validation and test code are in one file. For each run, 
@@ -147,9 +156,9 @@ and extreme learning rate. While Adabound is designed to compensate this problem
 on learning rates to avoid a violent oscillation of learning rate, and achieved a smoothed transition to SGD.
 
 ## Results
-The network architecture which has the best numerical performance were RDN with trellis, RDN, 
+The network architecture which has the best numerical performance were RDN, RDN with trellis, 
 followed by CARN, img2img translation model. 
-The results of my projects are uploaded to 
+The results of my projects were uploaded to 
 [Google Drive](https://drive.google.com/file/d/1USPBeXBbmF1CtKrALtd7BzwZ2MnzBO4k/view?usp=sharing).
 
 ## Future Work
