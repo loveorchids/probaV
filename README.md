@@ -26,14 +26,13 @@ SR
 ```
 
 ### Table of Contents
-- <a href='### Training and Testing'>Training and Testing</a>
-- <a href='### Code Arrangement'>Code Arrangement</a>
-- <a href='#training-ssd'>Train</a>
-- <a href='#evaluation'>Evaluate</a>
-- <a href='#performance'>Performance</a>
-- <a href='#demos'>Demos</a>
-- <a href='#todo'>Future Work</a>
-- <a href='#references'>Reference</a>
+- <a href='#Training and Testing'>Training and Testing</a>
+- <a href='#Code Arrangement'>Code Arrangement</a>
+- <a href='#Backgrounds'>Backgrounds</a>
+- <a href='#Network Architecture'>Network Architecture</a>
+- <a href='#Results'>Results</a>
+- <a href='#Future Work'>Future Work</a>
+- <a href='#References'>Reference</a>
 
 ### Training and Testing
 Training, validation and test code are in one file. For each run, 
@@ -61,7 +60,7 @@ SR
 ```
 
 
-### Code arrangement
+### Code Arrangement
 under folder researches/img2img/probaV, are the codes for super-resolution task:
 ```
 probaV_sr.py: 
