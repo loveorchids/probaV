@@ -98,7 +98,7 @@ in this project.<br>
 ## Proposal and Ideas
 #### Loading Data
 In this project, the problem was tackled as an single-input super resolution task (though 
-9~20 images will be fed to the network at each iteration). Actually these 9~20 images were 
+9-20 images will be fed to the network at each iteration). Actually these 9-20 images were 
 considered as a multi-channel image. To preserve the information, the image loaded into our
 model is in a 14-bit depth, which proved to be better then 8-bit images.<br>
 As all of the high resolution and low resolution images have a mask indicating clouds, and 
