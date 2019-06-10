@@ -105,6 +105,7 @@ As all of the high resolution and low resolution images have a mask indicating c
 clouds are not required to be reconstruct. pixels with cloud are required to be eliminated.
 But due to the mask are not optimal (usually they are bigger then the cloud area), see the
 example below:<br>
+![Data](https://github.com/loveorchids/probaV/blob/master/samples.png)<br>
 So we blended the mask with the image by applying a gaussian filter with a random radius 
 onto the mask and assign an alpha randomized from 0.1 to 0.4. Also, to make the contrast 
 to be the same, an adaptive contrast normalization technique (CLAHE) was also applied. 
