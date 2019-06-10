@@ -78,18 +78,18 @@ pvsr_preset.py:
 ```
 
 ## Backgrounds
-Super Resolutions tasks could be divided into sinle-input super resolution(SISR)[3, 4] 
+Super Resolutions tasks could be divided into sinle-input super resolution(SISR) [3, 4] 
 and multi-input super-resolutions(MISR). For SISR tasks, it has been well developed and 
-would be extremely hard to achieve further improvement[1]. While more and more 
+would be extremely hard to achieve further improvement [1]. While more and more 
 research interests were devoted into MISR tasks, e.g. reference-based super resolution
- (RefSR) [1, 2] and stereo image super resolution[6, 7]. <br>
+ (RefSR) [1, 2] and stereo image super resolution [6, 7]. <br>
 For RefSR tasks, there is a high resolution (HR) reference image has a similar content 
 with the low resolution (LR) image, the key point for the task is to match the content 
 from HR image to LR image efficiently. But in Proba-V task, we do not have such HR 
 reference image, methods for RefSR will not be used in this project. <br>
 For stereo image SR tasks, the key point to state-of-the-art methods would be a how 
 to reduce the parallax. [7] tackle the problem by applying a modified version of Self-
-Attention Module[8] to connect long-range spatial structure of stereo images. Due 
+Attention Module [8] to connect long-range spatial structure of stereo images. Due 
 to the all input images are captured from the same view point by the satellite, reducing 
 the parallax or paying attention to the long-range spatial features may not help much 
 in this project.<br>
@@ -119,11 +119,11 @@ of this problem, the characteristic of image-to-image translation model was **do
 (encode information into semantic level information
 to reduce the spatial size of feature map), **flat-convolution** (perform non-linear transformation 
 to the feature map) and **up-convolution** (decode the semantic level into the spatial feature again).
-2. RDN[3]: <br>
+2. RDN [3]: <br>
 An implementation of vanilla Residual Dense Network.
-3. CARN[4]: <br>
+3. CARN [4]: <br>
 An implementation of vanilla Cascaded Residual Network.
-4. Trellis Module[5]:<br>
+4. Trellis Module [5]:<br>
 Trellis Module was proposed by [5] in crowd density estimation, to encode the small and dense
 object efficiently. We apply this module in order to encode the those low level feature effectively, so these
 encoded information could be used for reconstruction.<br>
@@ -141,7 +141,7 @@ layers (e.g. conv1, conv2,  conv5).
 #### Loss Functions and Optimizer
 In this project, Loss functions are MSE, MAE, cMSE and cPSNR. cMSE and cPSNR are implemented 
 according to the instructions in proba-V scoring page.<br>
-As for optimizer, instead of Adam, we use Adabound[9] to carry out optimization. Adam is known as a super 
+As for optimizer, instead of Adam, we use Adabound [9] to carry out optimization. Adam is known as a super 
 convergence, but the result of Adam is usually not as optimal as SGD due to the unstable
 and extreme learning rate. While Adabound is designed to compensate this problem by applying a dynamic bound 
 on learning rates to avoid a violent oscillation of learning rate, and achieved a smoothed transition to SGD.
@@ -158,7 +158,7 @@ current version of PyTorch usually tends to achieve sub-optimal result when comp
 I have also did an experiment about optimizing a model for cifar-10 tasks using a keras implementation
 and a PyTorch implementation. Especially for tasks like super resolution, LSTM related models, sub-optimal 
 results will cause large difference in the final result.
-2. NAS[10] for hyper-parameter tuning<br>
+2. NAS [10] for hyper-parameter tuning<br>
 Recently, "Learning to Learn" became a hot idea which combine the concept of Reinforcement Learning into tuning
 the neural network structure. Support NAS for hyper-parameter tuning is also the goal for omni-torch.
 
