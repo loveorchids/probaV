@@ -70,10 +70,10 @@ class RDN(nn.Module):
             self.evaluator = Vgg16BN()
         else:
             self.evaluator = None
-        self.group_conv1 = block.conv_block(channel, [filters * group, filters * group], kernel_sizes=[3, 3],
-                                           stride=[1, 1], padding=[1, 1], groups=[group] * 2, name="block1", batch_norm=BN)
-        self.conv1 = nn.Conv2d(filters * group, out_channels=filters, kernel_size=1, padding=0, stride=1)
-        self.SFF1 = nn.Conv2d(in_channels=filters, out_channels=filters, kernel_size=3, padding=1, stride=1)
+       #self.group_conv1 = block.conv_block(channel, [filters * group, filters * group], kernel_sizes=[3, 3],
+                                           #stride=[1, 1], padding=[1, 1], groups=[group] * 2, name="block1", batch_norm=BN)
+        #self.conv1 = nn.Conv2d(filters * group, out_channels=filters, kernel_size=1, padding=0, stride=1)
+        self.SFF1 = nn.Conv2d(in_channels=channel, out_channels=filters, kernel_size=3, padding=1, stride=1)
         self.SFF2 = nn.Conv2d(in_channels=filters, out_channels=filters, kernel_size=3, padding=1, stride=1)
         self.RDB1 = RDB(nb_layers=rdb_number, input_dim=filters, growth_rate=filters)
         self.RDB2 = RDB(nb_layers=rdb_number, input_dim=filters, growth_rate=filters)
@@ -102,8 +102,8 @@ class RDN(nn.Module):
         
     
     def forward(self, x, y, train=True):
-        x = self.group_conv1(x)
-        x = self.conv1(x)
+        #x = self.group_conv1(x)
+        #x = self.conv1(x)
         f_ = self.SFF1(x)
         f_0 = self.SFF2(f_)
         f_1 = self.RDB1(f_0)
