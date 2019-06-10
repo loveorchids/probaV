@@ -26,12 +26,12 @@ SR
 ```
 
 ### Table of Contents
-- <a href='#Training and Testing'>Training and Testing</a>
-- <a href='#Code Arrangement'>Code Arrangement</a>
+- <a href='#Code'>Code Arrangement</a>
 - <a href='#Backgrounds'>Backgrounds</a>
-- <a href='#Network Architecture'>Network Architecture</a>
+- <a href='#Proposal'>Proposal</a>
+- <a href='#Network'>Network</a>
 - <a href='#Results'>Results</a>
-- <a href='#Future Work'>Future Work</a>
+- <a href='#FutureWork'>Future Work</a>
 - <a href='#References'>Reference</a>
 
 ### Training and Testing
@@ -60,7 +60,7 @@ SR
 ```
 
 
-### Code Arrangement
+### Code
 under folder researches/img2img/probaV, are the codes for super-resolution task:
 ```
 probaV_sr.py: 
@@ -103,7 +103,7 @@ the parallax or paying attention to the long-range spatial features may not help
 in this project.<br>
 
 
-## Proposal and Ideas
+## Proposal
 #### Loading Data
 In this project, the problem was tackled as an single-input super resolution task (though 
 9-20 images will be fed to the network at each iteration). Actually these 9-20 images were 
