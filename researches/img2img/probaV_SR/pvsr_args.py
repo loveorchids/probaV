@@ -33,7 +33,7 @@ def parse_arguments():
     "--batch_size_per_gpu",
     type=int,
     help="batch size inside each GPU during training",
-    default=2
+    default=3
   )
   parser.add_argument(
     "-lt",
