@@ -70,6 +70,8 @@ class RDN(nn.Module):
             self.evaluator = Vgg16BN()
         else:
             self.evaluator = None
+        self.conv1 = nn.Conv2d(channel, out_channels=filters, kernel_size=3, padding=1, stride=1)
+        
         self.SFF1 = nn.Conv2d(in_channels=channel, out_channels=filters, kernel_size=3, padding=1, stride=1)
         self.SFF2 = nn.Conv2d(in_channels=filters, out_channels=filters, kernel_size=3, padding=1, stride=1)
         self.RDB1 = RDB(nb_layers=rdb_number, input_dim=filters, growth_rate=filters)
@@ -81,7 +83,7 @@ class RDN(nn.Module):
                                 kernel_size=3, padding=1)
         self.pixelshuffle = nn.PixelShuffle(upscale_factor)
         self.conv2 = nn.Conv2d(in_channels=filters, out_channels=1, kernel_size=3, padding=1)
-        #self.trellis = module.Trellis_Structure(filters=filters, depth=4)
+        self.trellis = module.Trellis_Structure(filters=filters, depth=4, out_depth=1)
         """
         self.norm_conv1 = block.conv_block(128, [128, 128, 64], kernel_sizes=[3, 1, 3], stride=[1, 1, 1],
                                            padding=[1, 0, 1], groups=[1] * 3, name="norm_conv1", batch_norm=BN,
@@ -109,10 +111,10 @@ class RDN(nn.Module):
         f_DF = f_GF + f_
         f_upconv = self.upconv(f_DF)
         f_upscale = self.pixelshuffle(f_upconv)
-        out = self.conv2(f_upscale)
+        #out = self.conv2(f_upscale)
         # f_conv2 = self.conv2(f_upscale)
-        #results = self.trellis(f_upscale)
-        #out = results[-1]
+        results = self.trellis(f_upscale)
+        out = results[-1]
         if train:
             #mae = sum([self.mae(result, y) for result in results]).unsqueeze_(0)
             mae = self.mae(out, y)

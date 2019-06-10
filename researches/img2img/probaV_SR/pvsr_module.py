@@ -7,7 +7,7 @@ import omni_torch.networks.blocks as block
 
 
 class Trellis_Structure(nn.Module):
-    def __init__(self, depth=4, filters=64, activation=nn.CELU()):
+    def __init__(self, depth=4, filters=64, activation=nn.CELU(), out_depth=1):
         super().__init__()
         self.depth = depth
         self.total_blocks = sum(range(depth + 1))
@@ -18,8 +18,9 @@ class Trellis_Structure(nn.Module):
                 final_inchannel = filters
             else:
                 in_channel = filters * 2
-                final_inchannel = filters + 1
-            sub_module = Trellis_Submodule(in_channel, filters, final_inchannel, activation, depth=i)
+                final_inchannel = filters + out_depth
+            sub_module = Trellis_Submodule(in_channel, filters, final_inchannel,
+                                           activation, depth=i, out_depth=out_depth)
             self.trellis_blocks.append(sub_module)
         
     def forward(self, x):
@@ -35,19 +36,29 @@ class Trellis_Structure(nn.Module):
         
 
 class Trellis_Submodule(nn.Module):
-    def __init__(self, in_channel, filters, final_inchannel, activation, depth):
+    def __init__(self, in_channel, filters, final_inchannel, activation, depth, out_depth):
         super().__init__()
         self.sub_module = nn.ModuleList([])
         for _ in range(depth):
             if _ == depth - 1:
-                filter = 1
+                filter = out_depth
                 in_channel = final_inchannel
             else:
                 filter = filters
             self.sub_module.append(
+                # Naive Block
                 block.conv_block(in_channel, filters=[filter, filter], kernel_sizes=[3, 1], stride=[1, 1],
-                                 padding=[1, 0], activation=activation)
-            )
+                                 padding=[1, 0], activation=activation))
+            """
+            # Multi-scale Encoding Block
+            block.InceptionBlock(in_channel, filters=[[filter, int(filter / 4)], [filter, int(filter / 4)],
+                                                      [filter, int(filter / 4)],
+                                                      [filter, filter - (int(filter / 4) * 3)]],
+                                 kernel_sizes=[[1, 7], [1, 5], [1, 3], 1], stride=[[1, 3], [1, 2], [1, 1], 1],
+                                 padding=[[0, 3], [0, 2], [0, 1], 0], batch_norm=None,
+                                 inner_maxout=None, activation=activation)"""
+            
+            
             
     def forward(self, input, first_line=False):
         result = []

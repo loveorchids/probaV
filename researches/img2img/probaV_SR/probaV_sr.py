@@ -9,10 +9,11 @@ from omni_torch.networks.optimizer.adabound import AdaBound
 import researches.img2img.probaV_SR.pvsr_data as data
 import researches.img2img.probaV_SR.pvsr_preset as preset
 import researches.img2img.probaV_SR.pvsr_model as model
+from researches.img2img.probaV_SR.pvsr_args import parse_arguments
 from researches.img2img.probaV_SR.pvsr_loss import *
 
-
-args = util.get_args(preset.PRESET)
+opt = parse_arguments()
+args = util.get_args(preset.PRESET, opt=opt)
 TMPJPG = os.path.expanduser("~/Pictures/tmp.jpg")
 
 
@@ -20,7 +21,7 @@ def to_array(lists):
     return [np.asarray(l) for l in list(zip(*lists))]
 
 
-def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
+def fit(args, net, dataset, optimizer, measure=None, is_train=True):
     def avg(list):
         return sum(list) / len(list)
     if is_train:
@@ -35,14 +36,15 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
         mae = torch.sum(mae) / 2
         s_mse = torch.sum(s_mse) / 2
 
+        # Visualize
         if batch_idx == 0 and not is_train:
             # Visualize the image-pairs of the first batch
             for i in range(images.size(0)):
                 # enumerate through batch
-                #img = vb.plot_tensor(args, images[i:i+1, :].permute(1, 0, 2, 3), margin=0)
+                img = vb.plot_tensor(args, images[i:i+1, :].permute(1, 0, 2, 3), margin=0)
                 pred = vb.plot_tensor(args, prediction[i: i+1, :9], margin=0)
                 gt = vb.plot_tensor(args, blend_target[i: i+1, :9], margin=0)
-                out = np.concatenate([pred, gt], axis=1)
+                out = np.concatenate([img, pred, gt], axis=1)
                 cv2.imwrite(os.path.join(args.val_log, "epoch_%d_%d.jpg"%(args.curr_epoch, i)), out/ 65536 * 255)
 
         prediction = [prediction] if type(prediction) not in [list, tuple] else prediction
@@ -76,9 +78,9 @@ def fit(args, net, dataset, optimizer, criterion, measure=None, is_train=True):
         return all_losses, [0]
 
 
-def val(args, net, dataset, optimizer, criterion, measure):
+def val(args, net, dataset, optimizer, measure):
     with torch.no_grad():
-        return fit(args, net, dataset, optimizer, criterion, measure, False)
+        return fit(args, net, dataset, optimizer, measure, False)
     
     
 def test():
@@ -102,7 +104,7 @@ def test():
 
 def main():
     dt = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")
-    datasets = data.fetch_probaV_data(args, sources=args.train_sources, k_fold=1, split_val=0.1,
+    datasets = data.fetch_probaV_data(args, sources=args.train_sources, k_fold=args.cross_val, split_val=0.1,
                                          batch_size=args.batch_size_per_gpu, auxiliary_info=[2, 2])
     for idx, (train_set, val_set) in enumerate(datasets):
         Loss, Measure = [], []
@@ -118,16 +120,16 @@ def main():
             net = util.load_latest_model(args, net, prefix=args.model_prefix_finetune, strict=True)
         optimizer = AdaBound(net.parameters(), lr=args.learning_rate, final_lr=10 * args.learning_rate,
                              weight_decay=args.weight_decay)
-        criterion = ListedLoss(type="l1", reduction="mean")
+        #criterion = ListedLoss(type="l1", reduction="mean")
         #criterion = torch.nn.DataParallel(criterion, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         measure = MultiMeasure(type="l2", reduction="mean")
         #measure = torch.nn.DataParallel(measure, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         for epoch in range(args.epoch_num):
-            _l, _m = fit(args, net, train_set, optimizer, criterion, measure, is_train=True)
+            _l, _m = fit(args, net, train_set, optimizer, measure, is_train=True)
             Loss.append(_l)
             Measure.append(_m)
             if val_set is not None:
-                _vl, _vm= val(args, net, val_set, optimizer, criterion, measure)
+                _vl, _vm= val(args, net, val_set, optimizer, measure)
                 val_Loss.append(_vl)
                 val_Measure.append(_vm)
 
@@ -144,7 +146,7 @@ def main():
                     titles=["Loss", "Measure"]
                 )
         # Clean the data for next cross validation
-        del net, optimizer, criterion, measure
+        del net, optimizer, measure
         args.curr_epoch = 0
 
 if __name__ == "__main__":
