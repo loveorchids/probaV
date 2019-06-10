@@ -158,7 +158,7 @@ and extreme learning rate. While Adabound is designed to compensate this problem
 dynamic bound on learning rates to avoid a violent oscillation of learning rate, and achieved a smoothed 
 transition to SGD.
 
-## Results and Reasoning
+## Results
 The network architecture which has the best numerical performance were RDN, RDN with trellis, 
 followed by CARN, img2img translation model. 
 The results of my projects were uploaded to 
