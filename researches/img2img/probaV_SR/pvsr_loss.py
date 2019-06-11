@@ -84,5 +84,5 @@ class MultiMeasure(nn.Module):
                     cMSE = cmse
                     coord = [u, v]
         cPSNR = -10 * torch.log10(cMSE)
-        MAE = self.mae(pred, target[0][:, :, coord[0]: coord[0] + 378, coord[1]: coord[1] + 378])
+        MAE = self.mae(SR, target[:, :, coord[0]: coord[0] + 378, coord[1]: coord[1] + 378])
         return  cPSNR, MAE
