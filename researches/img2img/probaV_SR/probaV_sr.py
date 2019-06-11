@@ -31,7 +31,7 @@ def fit(args, net, dataset, optimizer, measure=None, is_train=True):
     epoch_loss, epoch_measure = [], []
     start_time = time.time()
     for batch_idx, (images, blend_target, unblend_target, norm) in enumerate(dataset):
-        images, blend_target = images.cuda(), blend_target.cuda()
+        images, blend_target, unblend_target = images.cuda(), blend_target.cuda(), unblend_target.cuda()
         prediction, mae, s_mse = net(images, blend_target)
         mae = torch.sum(mae) / 2
         s_mse = torch.sum(s_mse) / 2
@@ -55,7 +55,7 @@ def fit(args, net, dataset, optimizer, measure=None, is_train=True):
         losses = [mae, s_mse]
         epoch_loss.append([float(loss.data) for loss in losses])
         if measure:
-            basic_measure = measure(prediction, blend_target, losses[0])
+            basic_measure = measure(prediction, unblend_target, blend_target)
             basic_measure = [basic_measure] if type(basic_measure) not in [list, tuple] else basic_measure
             epoch_measure.append([float(loss.data) for loss in basic_measure])
         if is_train:

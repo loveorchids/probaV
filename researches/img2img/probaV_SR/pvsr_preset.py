@@ -12,7 +12,7 @@ def GeneralPattern_01(args):
     
     args.output_gpu_id = 0
     args.random_order_load = False
-    args.batch_size_per_gpu = 2
+    args.batch_size_per_gpu = 4
     args.loading_threads = 2
     args.img_channel = 1
     args.curr_epoch = 0
@@ -23,7 +23,7 @@ def GeneralPattern_01(args):
     args.img_bit = 16
     args.img_bias = (0.5, 0.5, 0.5)
 
-    args.finetune = False
+    args.finetune = True
     return args
 
 

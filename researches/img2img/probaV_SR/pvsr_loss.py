@@ -60,20 +60,29 @@ class MultiMeasure(nn.Module):
     def __init__(self, type="l1", reduction="mean"):
         super().__init__()
         self.mae = ListedLoss(type=type, reduction=reduction)
+        self.mse = nn.MSELoss(reduction="sum")
 
-    def forward(self, pred, blended_target, MSE, norm=None, coord=None):
+    def forward(self, pred, target, blended_target):
         """
         cPSNR Implemented aaccording to:
         https://kelvins.esa.int/proba-v-super-resolution/scoring/
         """
-        if norm:
-            PSNR = norm / (-10 * torch.log10(1 / MSE))
-        else:
-            PSNR = -10 * torch.log10(1 / MSE)
-        if coord:
-            c_pred = pred[:, :, 3: 381, 3: 381]
-            target = blended_target[:, :, coord[0]: coord[0] + 378, coord[1]: coord[1] + 378]
-            MAE = self.mae(c_pred, target)
-        else:
-            MAE = self.mae(pred, blended_target)
-        return  PSNR, MAE
+        SR = pred[0][:, :, 3: 381, 3: 381]
+        cMSEs = []
+        cMSE, min_coord = torch.tensor(999999999.9), [0, 0]
+        for u in range(0, 7):
+            for v in range(0, 7):
+                HR_uv = target[:, :, u: u + 378, v: v + 378]
+                # mask pixel is less than this value
+                # because we normalize the image to -1 ~ 1
+                co_eff = 1 / torch.sum(HR_uv > -0.995).float()
+                b = co_eff * torch.sum((HR_uv - SR) * (HR_uv > -0.995).float())
+                # cmse = torch.sum((HR_uv - (SR + b)) ** 2)
+                cmse = co_eff * self.mse(HR_uv, SR + b)
+                #print(cmse)
+                if float(cmse) < float(cMSE):
+                    cMSE = cmse
+                    coord = [u, v]
+        cPSNR = -10 * torch.log10(cMSE)
+        MAE = self.mae(pred, target[0][:, :, coord[0]: coord[0] + 378, coord[1]: coord[1] + 378])
+        return  cPSNR, MAE
