@@ -11,6 +11,7 @@ import researches.img2img.probaV_SR.pvsr_preset as preset
 import researches.img2img.probaV_SR.pvsr_model as model
 from researches.img2img.probaV_SR.pvsr_args import parse_arguments
 from researches.img2img.probaV_SR.pvsr_loss import *
+from researches.img2img.probaV_SR import *
 
 opt = parse_arguments()
 args = util.get_args(preset.PRESET, opt=opt)
@@ -131,6 +132,7 @@ def main():
             print("args.which_model or -wm should be one of [carn, rdn, basic], "
                   "your -wm %s is illegal, and switched to 'basic' automatically"%(args.which_model.lower()))
             net = model.ProbaV_basic(inchannel=args.n_selected_img)
+        net.apply(init_cnn)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
         if args.finetune:
