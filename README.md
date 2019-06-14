@@ -34,7 +34,8 @@ Finally, after training is completed, the model will test itself on the test set
 ```
 cd ~/Documents/probaV/researches/img2img/probaV
 python3 probaV_sr.py --train --test
-# if you only want to run thew train mode, then
+
+# if you only want to run in train mode only, then
 python3 probaV_sr.py --train
 ```
 When you start training, it will create a folder (name is probaV_exp) under: ~/Pictures/dataset/SR/<br />
