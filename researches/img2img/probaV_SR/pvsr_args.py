@@ -7,6 +7,29 @@ def parse_arguments():
   #        TRAINING        #
   ##############
   parser.add_argument(
+    "--train",
+    action="store_true",
+    help="do train mode",
+  )
+  parser.add_argument(
+    "--test",
+    action="store_true",
+    help="do test mode",
+  )
+  parser.add_argument(
+    "-tr",
+    "--trellis",
+    action="store_true",
+    help="use trellis, only when -wm is rdn",
+  )
+  parser.add_argument(
+    "-wm",
+    "--which_model",
+    type=str,
+    help="choose between rdn, carn, basic",
+    default=200
+  )
+  parser.add_argument(
     "-dt",
     "--deterministic_train",
     action="store_true",

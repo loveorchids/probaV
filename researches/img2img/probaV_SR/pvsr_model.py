@@ -7,14 +7,14 @@ import researches.img2img.probaV_SR.pvsr_module as module
 
 
 class CARN(nn.Module):
-    def __init__(self, inchannel, filters, scale, BN=nn.BatchNorm2d, s_MSE=False):
+    def __init__(self, inchannel, filters, scale, BN=nn.BatchNorm2d, s_MSE=False, trellis=False):
         super(CARN, self).__init__()
         self.scale = scale
         if s_MSE:
             self.evaluator = Vgg16BN()
         else:
             self.evaluator = None
-        
+        self.trellis = trellis
         self.sub_mean = module.MeanShift((0.4488, 0.4371, 0.4040), sub=True)
         self.add_mean = module.MeanShift((0.4488, 0.4371, 0.4040), sub=False)
         
@@ -26,6 +26,8 @@ class CARN(nn.Module):
         self.c1 = module.BasicBlock(filters * 2, filters, 1, 1, 0)
         self.c2 = module.BasicBlock(filters * 3, filters, 1, 1, 0)
         self.c3 = module.BasicBlock(filters * 4, filters, 1, 1, 0)
+        if trellis:
+            self.trellis = module.Trellis_Structure(filters=filters, depth=4, out_depth=filters)
         
         self.upsample = module.UpsampleBlock(filters, scale=scale)
         self.exit = nn.Conv2d(filters, 1, 3, 1, 1)
@@ -49,6 +51,9 @@ class CARN(nn.Module):
         c3 = torch.cat([c2, b3], dim=1)
         o3 = self.c3(c3)
         
+        if self.trellis:
+            o3 = self.trellis(o3)[-1]
+        
         out = self.upsample(o3)
         
         out = self.exit(out)
@@ -64,12 +69,13 @@ class CARN(nn.Module):
 
 
 class RDN(nn.Module):
-    def __init__(self, channel, rdb_number, upscale_factor, BN=nn.BatchNorm2d, s_MSE=False, filters=64, group=1):
+    def __init__(self, channel, rdb_number, upscale_factor, BN=nn.BatchNorm2d, s_MSE=False, filters=64, group=1, trellis=False):
         super(RDN, self).__init__()
         if s_MSE:
             self.evaluator = Vgg16BN()
         else:
             self.evaluator = None
+        self.trellis = trellis
        #self.group_conv1 = block.conv_block(channel, [filters * group, filters * group], kernel_sizes=[3, 3],
                                            #stride=[1, 1], padding=[1, 1], groups=[group] * 2, name="block1", batch_norm=BN)
         #self.conv1 = nn.Conv2d(filters * group, out_channels=filters, kernel_size=1, padding=0, stride=1)
@@ -84,7 +90,8 @@ class RDN(nn.Module):
                                 kernel_size=3, padding=1)
         self.pixelshuffle = nn.PixelShuffle(upscale_factor)
         #self.conv2 = nn.Conv2d(in_channels=filters, out_channels=1, kernel_size=3, padding=1)
-        #self.trellis = module.Trellis_Structure(filters=filters, depth=4, out_depth=1)
+        if trellis:
+            self.trellis = module.Trellis_Structure(filters=filters, depth=4, out_depth=1)
         
         self.norm_conv1 = block.conv_block(filters, [filters, filters, 1], kernel_sizes=[3, 3, 1], stride=[1, 1, 1],
                                            padding=[1, 1, 0], groups=[1] * 3, name="norm_conv1", batch_norm=None,
@@ -99,7 +106,6 @@ class RDN(nn.Module):
                                            """
         self.mae = nn.L1Loss()
         self.s_mse_loss = nn.MSELoss()
-        
     
     def forward(self, x, y, train=True):
         #x = self.group_conv1(x)
@@ -115,7 +121,11 @@ class RDN(nn.Module):
         f_DF = f_GF + f_
         f_upconv = self.upconv(f_DF)
         f_upscale = self.pixelshuffle(f_upconv)
-        out = self.norm_conv1(f_upscale)
+        if self.trellis:
+            results = self.trellis(f_upscale)
+            out = results[-1]
+        else:
+            out = self.norm_conv1(f_upscale)
         # f_conv2 = self.conv2(f_upscale)
         #results = self.trellis(f_upscale)
         #out = results[-1]

@@ -111,9 +111,12 @@ def main():
         val_Loss, val_Measure = [], []
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
-        #net = model.CARN(10, 64, 3, s_MSE=True)
-        net = model.RDN(args.n_selected_img, 3, 3, filters=64, s_MSE=True, group=args.n_selected_img)
-        #net = model.ProbaV_basic(inchannel=args.n_selected_img)
+        if args.which_model.lower() == "carn":
+            net = model.CARN(args.n_selected_img, 64, 3, s_MSE=True, trellis=args.trellis)
+        elif args.which_model.lower() == "rdn":
+            net = model.RDN(args.n_selected_img, 3, 3, filters=64, s_MSE=True, group=args.n_selected_img, trellis=args.trellis)
+        elif args.which_model.lower() == "basic":
+            net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
         if args.finetune:

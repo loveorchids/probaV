@@ -23,13 +23,15 @@ def GeneralPattern_01(args):
     args.img_bit = 16
     args.img_bias = (0.5, 0.5, 0.5)
 
-    args.finetune = True
+    args.finetune = False
     return args
 
 
 def UniquePattern_01(args):
-    args.model_prefix = "rdn"
-    args.model_prefix_finetune = "rdn"
+    args.which_model="basic"
+    args.trellis = False
+    args.model_prefix = "sr"
+    args.model_prefix_finetune = "sr"
     args.train_sources = ["probaV/train"]#, "probaV/train/RED"]
     args.test_sources = ["probaV/test"]  # , "probaV/train/RED"]
     # Select n images from each folder for train, val and test
@@ -40,6 +42,8 @@ def UniquePattern_01(args):
 
 
 def RuntimePattern(args):
+    args.train = False
+    args.test = False
     return args
 
 
