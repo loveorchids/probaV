@@ -152,7 +152,7 @@ def main():
 
             if (epoch + 1) % 10 == 0:
                 util.save_model(args, args.curr_epoch, net.state_dict(), prefix=args.model_prefix,
-                                keep_latest=20)
+                                keep_latest=10)
             if (epoch + 1) > 5:
                 vb.plot_multi_loss_distribution(
                     multi_line_data=[to_array(Loss) + to_array(val_Loss), to_array(Measure) + to_array(val_Measure)],

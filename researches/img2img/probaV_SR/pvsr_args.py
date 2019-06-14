@@ -50,7 +50,6 @@ def parse_arguments():
     help="number of cross validation",
     default=1
   )
-
   parser.add_argument(
     "-bpg",
     "--batch_size_per_gpu",
@@ -65,6 +64,12 @@ def parse_arguments():
     help="loading_threads correspond to each GPU during both training and validation, "
          "e.g. You have 4 GPU and set -lt 2, so 8 threads will be used to load data",
     default=2
+  )
+  parser.add_argument(
+      "-mp",
+      "--model_prefix",
+      type=str,
+      help="prefix of model",
   )
   args = parser.parse_args()
   return args
