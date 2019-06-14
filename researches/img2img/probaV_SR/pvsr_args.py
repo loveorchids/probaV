@@ -27,7 +27,7 @@ def parse_arguments():
     "--which_model",
     type=str,
     help="choose between rdn, carn, basic",
-    default=200
+    default="basic"
   )
   parser.add_argument(
     "-dt",

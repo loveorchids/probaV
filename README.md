@@ -33,7 +33,9 @@ if the model is overfitted or not.
 Finally, after training is completed, the model will test itself on the test set. <br />
 ```
 cd ~/Documents/probaV/researches/img2img/probaV
-python3 probaV_sr.py
+python3 probaV_sr.py --train --test
+# if you only want to run thew train mode, then
+python3 probaV_sr.py --train
 ```
 When you start training, it will create a folder (name is probaV_exp) under: ~/Pictures/dataset/SR/<br />
 Under this folder, there is
@@ -49,6 +51,18 @@ SR
     |--%s_epoch_%d.pth  (%s: model's specific name assigned by user. %d: epoch number)
     |-- ......
 ```
+
+### Trouble Shooting
+In case the code does not execute properly:
+1. check if you have cloned my other repository **omni_torch**. By default omni_torch should be 
+located under your ```~/Documents/probaV/omni_torch```, and make sure it is not empty. 
+```git clone https://github.com/loveorchids/omni_torch ~/Documents/probaV``` if omni_torch is empty.
+2. I'm using a library called **imgaug** to perform image augmentation. Imgaug is still adding new 
+exciting augmentation functions to make it better. If there is any error related to imgaug, please make
+ sure you have its latest version. (**current 0.2.9**)
+3. If there is any error related to **Matplotlib**, this usually happens when you have completed the training
+ for several epoches. If such an error happens, this may related to your settings or tkinter installation. 
+ You can search the errors on Google to find a solution to this.
 
 ### Report Content
 - <a href='#Code-arrange'>Code Arrange</a>
@@ -163,6 +177,7 @@ The network architecture which has the best numerical performance were RDN, RDN 
 followed by CARN, img2img translation model. 
 The results of my projects were uploaded to 
 [Google Drive](https://drive.google.com/file/d/1USPBeXBbmF1CtKrALtd7BzwZ2MnzBO4k/view?usp=sharing).
+Numerical result comparison will be updated soon.
 
 ## Future Work
 1. **Using Tensorflow to re-implement**<br>
