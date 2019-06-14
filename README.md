@@ -4,7 +4,7 @@ contest code for proba-V super resolution.
 ## Installation
 How to clone this repo:
 ```
-git clone --recurse-submodules https://github.com/loveorchids/probaV ~/Documents/sroie2019
+git clone --recurse-submodules https://github.com/loveorchids/probaV ~/Documents/probaV
 ```
 
 ## Requirement
