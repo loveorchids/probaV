@@ -21,7 +21,6 @@ TMPJPG = os.path.expanduser("~/Pictures/tmp.jpg")
 def to_array(lists):
     return [np.asarray(l) for l in list(zip(*lists))]
 
-
 def fit(args, net, dataset, optimizer, measure=None, is_train=True):
     def avg(list):
         return sum(list) / len(list)
