@@ -88,9 +88,9 @@ def test():
     dataset = data.fetch_probaV_data(args, sources=args.test_sources, shuffle=False,
                                       batch_size=1 / torch.cuda.device_count(), auxiliary_info=[2, 2])[0][0]
     if args.which_model.lower() == "carn":
-        net = model.CARN(args.n_selected_img, 64, 3, s_MSE=True, trellis=args.trellis)
+        net = model.CARN(args.n_selected_img, args.filters, 3, s_MSE=True, trellis=args.trellis)
     elif args.which_model.lower() == "rdn":
-        net = model.RDN(args.n_selected_img, 3, 3, filters=64, s_MSE=True, group=args.n_selected_img,
+        net = model.RDN(args.n_selected_img, 3, 3, filters=args.filters, s_MSE=True, group=args.n_selected_img,
                         trellis=args.trellis)
     elif args.which_model.lower() == "basic":
         net = model.ProbaV_basic(inchannel=args.n_selected_img)
@@ -122,9 +122,9 @@ def main():
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
         if args.which_model.lower() == "carn":
-            net = model.CARN(args.n_selected_img, 64, 3, s_MSE=True, trellis=args.trellis)
+            net = model.CARN(args.n_selected_img, args.filters, 3, s_MSE=True, trellis=args.trellis)
         elif args.which_model.lower() == "rdn":
-            net = model.RDN(args.n_selected_img, 3, 3, filters=64, s_MSE=True, group=args.n_selected_img, trellis=args.trellis)
+            net = model.RDN(args.n_selected_img, 3, 3, filters=args.filters, s_MSE=True, group=args.n_selected_img, trellis=args.trellis)
         elif args.which_model.lower() == "basic":
             net = model.ProbaV_basic(inchannel=args.n_selected_img)
         else:
@@ -160,7 +160,7 @@ def main():
                     multi_line_labels=[["train_mae", "train_smse", "val_mae", "val_smse"],
                                        ["train_PSNR", "train_L1", "val_PSNR", "val_L1",]],
                     save_path=args.loss_log, window=3, name=dt + "cv_%d"%(idx+1),
-                    bound=[{"low": 0.0, "high": 0.3}, None],
+                    bound=[{"low": 0.0, "high": 0.15}, None],
                     titles=["Loss", "Measure"]
                 )
         # Clean the data for next cross validation

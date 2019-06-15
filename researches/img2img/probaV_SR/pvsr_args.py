@@ -44,6 +44,12 @@ def parse_arguments():
     default=200
   )
   parser.add_argument(
+    "--filters",
+    type=int,
+    help="Epoch number of the training",
+    default=64
+  )
+  parser.add_argument(
     "-cv",
     "--cross_val",
     type=int,

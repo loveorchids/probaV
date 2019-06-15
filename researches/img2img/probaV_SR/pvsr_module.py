@@ -130,12 +130,12 @@ class CarnBlock(nn.Module):
                  group=1):
         super(CarnBlock, self).__init__()
 
-        self.b1 = ResidualBlock(64, 64)
-        self.b2 = ResidualBlock(64, 64)
-        self.b3 = ResidualBlock(64, 64)
-        self.c1 = BasicBlock(64 * 2, 64, 1, 1, 0)
-        self.c2 = BasicBlock(64 * 3, 64, 1, 1, 0)
-        self.c3 = BasicBlock(64 * 4, 64, 1, 1, 0)
+        self.b1 = ResidualBlock(in_channels, out_channels)
+        self.b2 = ResidualBlock(out_channels, out_channels)
+        self.b3 = ResidualBlock(out_channels, out_channels)
+        self.c1 = BasicBlock(out_channels * 2, out_channels, 1, 1, 0)
+        self.c2 = BasicBlock(out_channels * 3, out_channels, 1, 1, 0)
+        self.c3 = BasicBlock(out_channels * 4, out_channels, 1, 1, 0)
 
     def forward(self, x):
         c0 = o0 = x

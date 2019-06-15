@@ -38,6 +38,7 @@ def UniquePattern_01(args):
     # if this is set to 0 then it means select all of them
     # should not be larger than 20 (20 is the maximum number)
     args.n_selected_img = 9
+    args.filters = 64
     return args
 
 
