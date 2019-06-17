@@ -219,6 +219,7 @@ The reason to this may possibily related to adding a Trellis Module increase the
 the model, make it hard to be optimized.  
 
 
+
 ## Future Work
 1. **Find out what makes the optimization so hard**<br>
 Currently, it seems everything is related to the optimization, there might be some reason 
