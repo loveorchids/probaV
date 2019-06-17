@@ -203,9 +203,9 @@ objects.<br>
 For example, on a task of super-resolution on human faces, given a blurred human face image,
 to perform super-resolution, the model are potentially required to remember the variety of 
 all the races of man kinds (Caucasian, Mongoloid, Negroid, etc.).<br>
-Based on above reason, we increase the parameter to 1.5 times, the result is not overfitted, 
-but the numerical result is worse. The possible reason to this is increase the parameter 
-makes the network hard to be optimized.<br>
+Based on above reason, we increase the parameter to 1.5 times, although the result is not 
+overfitted, the numerical result is not good. The possible reason to this is increase the 
+parameter makes the network hard to be optimized.<br>
 
 #### Why use Trellis Module
 Due to the result of both RDN and CARN looks a little bit blurred, increase the shapeness 
