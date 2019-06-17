@@ -190,8 +190,8 @@ testing experiments. The name of these images composed by words:<br>
 1. rdn: the structure of model is Residual Dense Network [3].
 2. carn: the structure of model is Cascading Residual Network [4]. 
 3. trellis: the Trellis module [5] is applied to enhance the low level feature or not.
-4. filter_64: the number of kernel for each convolutional layer in "rdn", "carn", "trellis" is 64.
-5. filter_96: the number of kernel for each convolutional layer in "rdn", "carn", "trellis" is 96.
+4. filter_64: the number of kernels in each convolutional layer of "rdn", "carn", "trellis" is 64.
+5. filter_96: the number of kernels in each convolutional layer of "rdn", "carn", "trellis" is 96.
 <br>
 #### Why increase the parameter from filter_64 to filter_96?
 Although the basic structure of super-resolution is convolutional layer, 
