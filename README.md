@@ -207,6 +207,7 @@ Based on above reason, we increase the parameter to 1.5 times, although the resu
 overfitted, the numerical result is not good. The possible reason to this is increase the 
 parameter makes the network hard to be optimized.<br>
 
+
 #### Why use Trellis Module
 Due to the result of both RDN and CARN looks a little bit blurred, increase the shapeness 
 of the output image became the first priority. <br>
