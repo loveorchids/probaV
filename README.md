@@ -192,8 +192,9 @@ testing experiments. The name of these images composed by words:<br>
 3. trellis: the Trellis module [5] is applied to enhance the low level feature or not.
 4. filter_64: the number of kernels in each convolutional layer of "rdn", "carn", "trellis" is 64.
 5. filter_96: the number of kernels in each convolutional layer of "rdn", "carn", "trellis" is 96.
-<br>
-#### Why increase the parameter from filter_64 to filter_96?<br>
+
+
+#### Why increase the parameter from filter_64 to filter_96
 Although the basic structure of super-resolution is convolutional layer, 
 We consider that unlike object recognition or detection tasks, the model for
 super resolution are not just required to "remember" the general statistical feature
@@ -204,7 +205,8 @@ to perform super-resolution, the model are potentially required to remember the 
 all the races of man kinds (Caucasian, Mongoloid, Negroid, etc.).<br>
 Based on above reason, we increase the parameter to 1.5 times, the result is not overfitted, 
 but the numerical result is worse. The possible reason to this is increase the parameter 
-makes the network hard to be optimized.<vr>
+makes the network hard to be optimized.<br>
+
 #### Why use Trellis Module
 Due to the result of both RDN and CARN looks a little bit blurred, increase the shapeness 
 of the output image became the first priority. <br>
