@@ -178,7 +178,7 @@ The network architecture which has the best numerical performance were RDN, RDN 
 followed by CARN, img2img translation model. 
 The results of the BEST setting of my projects were uploaded to 
 [Google Drive](https://drive.google.com/file/d/1USPBeXBbmF1CtKrALtd7BzwZ2MnzBO4k/view?usp=sharing).<br>
-Numerical result comparisons are uploaded [here](https://drive.google.com/file/d/1HWmhTSBVgXcVIPcwiv-14egokw-FeRKn/view?usp=sharing).
+Numerical result comparisons are uploaded [here](https://drive.google.com/file/d/1e4HqSJTrqNH6nub0v6XdijUMy2Abomks/view?usp=sharing).
 After you download this, you will find 8 images indicating the optimization process of 8 hyperparameter 
 testing experiments. The name of these images composed by words:<br>
 "rdn", "carn", "trellis", "filter_64", "filter_96", the meaning of these words are: <br> 
@@ -188,8 +188,6 @@ testing experiments. The name of these images composed by words:<br>
 4. filter_64: the number of kernel for each convolutional layer in "rdn", "carn", "trellis" is 64.
 5. filter_96: the number of kernel for each convolutional layer in "rdn", "carn", "trellis" is 96.
 <br>
-
-## Reasoning
 #### Why increase the parameter from filter_64 to filter_96?
 Although the basic structure of super-resolution is convolutional layer, 
 We consider that unlike object recognition or detection tasks, the model for
@@ -207,6 +205,7 @@ As Trellis Module has shown the ability of generating the feature map of CNN out
 resolution to a good estimation of density of human crowds in high resolution, we expect an 
 RDN with Trellis module can form a coarse-to-fine architecture to improve the output result 
 gradually.
+
 
 
 ## Future Work
