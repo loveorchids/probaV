@@ -215,12 +215,10 @@ As Trellis Module has shown the ability of generating the feature map of CNN out
 resolution to a good estimation of density of human crowds in high resolution, we expect an 
 RDN with Trellis Module can form a coarse-to-fine architecture to improve the output result 
 gradually.
-Adding a Trellis Module did not improve the result either, but also increase almost 50% of 
-the total parameter. The negative effect is not as large as simply increase the parameter 
-by 50%. 
-The reason to this may possibily related to adding a Trellis Module increase the depth of 
-the model, make it hard to be optimized.  
-
+Adding a Trellis Module increase the parameter by around 50%, while he negative effect is 
+not as large as compared to simply increase the parameter by 50%. 
+The reason to this may possibily related to adding a Trellis Module increasing the depth 
+of the model, which makes it hard to be optimized. Also no sign of overfitting detected.
 
 
 ## Future Work
