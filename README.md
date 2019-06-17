@@ -165,8 +165,13 @@ The "evaluation score" is defined as the MSE of prediction and ground truth of s
 layers (e.g. conv1, conv2,  conv5).
 
 #### Loss Functions and Optimizer
-In this project, Loss functions are MSE, MAE, cMSE and cPSNR. cMSE and cPSNR are implemented 
-according to the instructions in proba-V scoring page.<br>
+In this project, Loss functions are sMSE, MAE, cMSE and cPSNR.<br>
+- MAE is used for calculating the difference of prediction image and ground truth image.<br>
+- sMSE stand for sematic MSE, it is used to calculating the difference of the semantic evaluation 
+result of prediction image and ground truth image. Semantic evaluation (sMSE) is obtained by calculating
+the MSE of Evaluator's layer output of both prediction and ground truth.<br>
+- cMSE is an intermidicate result for cPSNR which is defined by the ProbaV.<br>
+
 As for optimizer, instead of Adam, we use Adabound [9] to carry out optimization. Adam is famous for its 
 super convergence, but the result of Adam is usually not as optimal as SGD due to the unstable
 and extreme learning rate. While Adabound is designed to compensate this problem by applying a 
@@ -196,25 +201,33 @@ of a specific kind of objects, but also to "remember" the varity of that kind of
 objects.<br>
 For example, on a task of super-resolution on human faces, given a blurred human face image,
 to perform super-resolution, the model are potentially required to remember the variety of 
-all the race of man kind (Asian, Afrian, Caucasian, etc.).<br>
-Thus we tried to increase the parameter to see if the result is improved.
+all the races of man kinds (Caucasian, Mongoloid, Negroid, etc.).<br>
+Based on above reason, we increase the parameter to 1.5 times, the result is not overfitted, 
+but the numerical result is worse. The possible reason to this is increase the parameter 
+makes the network hard to be optimized.
 #### Why use Trellis Module
 Due to the result of both RDN and CARN looks a little bit blurred, increase the shapeness 
 of the output image became the first priority. <br>
 As Trellis Module has shown the ability of generating the feature map of CNN output in low 
 resolution to a good estimation of density of human crowds in high resolution, we expect an 
-RDN with Trellis module can form a coarse-to-fine architecture to improve the output result 
+RDN with Trellis Module can form a coarse-to-fine architecture to improve the output result 
 gradually.
-
+Adding a Trellis Module did not improve the result either, but also increase almost 50% of 
+the total parameter. The negative effect is not as large as simply increase the parameter 
+by 50%. 
+The reason to this may possibily related to adding a Trellis Module increase the depth of 
+the model, make it hard to be optimized.  
 
 
 ## Future Work
-1. **Using Tensorflow to re-implement**<br>
+1. **Find out what makes the optimization so hard**<br>
+Currently, it seems everything is related to the optimization, there might be some reason 
+which prevent the result from being optimized.
+2. **Using Tensorflow to re-implement**<br>
 current version of PyTorch usually tends to achieve sub-optimal result when compared to Tensorflow. 
 I have also did an experiment about optimizing a model for cifar-10 tasks using a keras implementation
-and a PyTorch implementation. Especially for tasks like super resolution, LSTM related models, sub-optimal 
-results will cause large difference in the final result.
-2. **NAS [10] for hyper-parameter tuning**<br>
+and a PyTorch implementation. (see omni_torch/examples/test).
+3. **NAS [10] for hyper-parameter tuning**<br>
 Recently, "Learning to Learn" became a hot idea which combine the concept of Reinforcement Learning into tuning
 the neural network structure. Support NAS for hyper-parameter tuning is also the goal for omni-torch.
 
