@@ -176,9 +176,38 @@ transition to SGD.
 ## Results
 The network architecture which has the best numerical performance were RDN, RDN with trellis, 
 followed by CARN, img2img translation model. 
-The results of my projects were uploaded to 
-[Google Drive](https://drive.google.com/file/d/1USPBeXBbmF1CtKrALtd7BzwZ2MnzBO4k/view?usp=sharing).
-Numerical result comparison will be updated soon.
+The results of the BEST setting of my projects were uploaded to 
+[Google Drive](https://drive.google.com/file/d/1USPBeXBbmF1CtKrALtd7BzwZ2MnzBO4k/view?usp=sharing).<br>
+Numerical result comparisons are uploaded [here](https://drive.google.com/file/d/1HWmhTSBVgXcVIPcwiv-14egokw-FeRKn/view?usp=sharing).
+After you download this, you will find 8 images indicating the optimization process of 8 hyperparameter 
+testing experiments. The name of these images composed by words:<br>
+"rdn", "carn", "trellis", "filter_64", "filter_96", the meaning of these words are: <br> 
+1. rdn: the structure of model is Residual Dense Network [3].
+2. carn: the structure of model is Cascading Residual Network [4]. 
+3. trellis: the Trellis module [5] is applied to enhance the low level feature or not.
+4. filter_64: the number of kernel for each convolutional layer in "rdn", "carn", "trellis" is 64.
+5. filter_96: the number of kernel for each convolutional layer in "rdn", "carn", "trellis" is 96.
+<br>
+
+## Reasoning
+#### Why increase the parameter from filter_64 to filter_96?
+Although the basic structure of super-resolution is convolutional layer, 
+We consider that unlike object recognition or detection tasks, the model for
+super resolution are not just required to "remember" the general statistical feature
+of a specific kind of objects, but also to "remember" the varity of that kind of
+objects.<br>
+For example, on a task of super-resolution on human faces, given a blurred human face image,
+to perform super-resolution, the model are potentially required to remember the variety of 
+all the race of man kind (Asian, Afrian, Caucasian, etc.).<br>
+Thus we tried to increase the parameter to see if the result is improved.
+#### Why use Trellis Module
+Due to the result of both RDN and CARN looks a little bit blurred, increase the shapeness 
+of the output image became the first priority. <br>
+As Trellis Module has shown the ability of generating the feature map of CNN output in low 
+resolution to a good estimation of density of human crowds in high resolution, we expect an 
+RDN with Trellis module can form a coarse-to-fine architecture to improve the output result 
+gradually.
+
 
 ## Future Work
 1. **Using Tensorflow to re-implement**<br>
