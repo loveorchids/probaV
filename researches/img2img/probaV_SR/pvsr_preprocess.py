@@ -60,6 +60,7 @@ def combine_mask_with_img(images, args, path, seed, size, device=None):
     #blended_images = [np.clip(img, a_min=0, a_max=max_intensity) for img in blended_images]
     blended_images = [(img - np.min(img)) / (np.max(img) - np.min(img)) * max_intensity for img in blended_images]
     #save_img(blended_images, blend_mask)
+    assert all([np.max(img) < 65536 for img in blended_images])
     return blended_images
 
 

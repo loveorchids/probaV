@@ -31,7 +31,12 @@ def fit(args, net, dataset, optimizer, measure=None, is_train=True):
     epoch_loss, epoch_measure = [], []
     start_time = time.time()
     for batch_idx, (images, blend_target, unblend_target, norm) in enumerate(dataset):
-        images, blend_target, unblend_target = images.cuda(), blend_target.cuda(), unblend_target.cuda()
+        images, blend_target, unblend_target = \
+            images.cuda() / 256, blend_target.cuda() / 256, unblend_target.cuda() / 256
+        if args.half_precision:
+            images, blend_target, unblend_target = \
+                images.half(), blend_target.half(), unblend_target.half()
+
         prediction, mae, s_mse = net(images, blend_target)
         mae = torch.sum(mae) / 2
         s_mse = torch.sum(s_mse) / 2
@@ -41,11 +46,11 @@ def fit(args, net, dataset, optimizer, measure=None, is_train=True):
             # Visualize the image-pairs of the first batch
             for i in range(images.size(0)):
                 # enumerate through batch
-                img = vb.plot_tensor(args, images[i:i+1, :].permute(1, 0, 2, 3), margin=0)
-                pred = vb.plot_tensor(args, prediction[i: i+1, :9], margin=0)
-                gt = vb.plot_tensor(args, blend_target[i: i+1, :9], margin=0)
+                img = vb.plot_tensor(args, images[i:i+1, :].permute(1, 0, 2, 3), margin=0, deNormalize=False)
+                pred = vb.plot_tensor(args, prediction[i: i+1, :9], margin=0, deNormalize=False)
+                gt = vb.plot_tensor(args, blend_target[i: i+1, :9], margin=0, deNormalize=False)
                 out = np.concatenate([img, pred, gt], axis=1)
-                cv2.imwrite(os.path.join(args.val_log, "epoch_%d_%d.jpg"%(args.curr_epoch, i)), out/ 65536 * 255)
+                cv2.imwrite(os.path.join(args.val_log, "epoch_%d_%d.jpg"%(args.curr_epoch, i)), out)
 
         prediction = [prediction] if type(prediction) not in [list, tuple] else prediction
         blend_target = [blend_target] if type(blend_target) not in [list, tuple] else blend_target
@@ -132,6 +137,8 @@ def main():
                   "your -wm %s is illegal, and switched to 'basic' automatically"%(args.which_model.lower()))
             net = model.ProbaV_basic(inchannel=args.n_selected_img)
         net.apply(init_cnn)
+        if args.half_precision:
+            net.half()
         net = torch.nn.DataParallel(net, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         torch.backends.cudnn.benchmark = True
         if args.finetune:
@@ -140,7 +147,7 @@ def main():
                              weight_decay=args.weight_decay)
         #criterion = ListedLoss(type="l1", reduction="mean")
         #criterion = torch.nn.DataParallel(criterion, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
-        measure = MultiMeasure(type="l2", reduction="mean")
+        measure = MultiMeasure(type="l2", reduction="mean", half_precision=args.half_precision)
         #measure = torch.nn.DataParallel(measure, device_ids=args.gpu_id, output_device=args.output_gpu_id).cuda()
         for epoch in range(args.epoch_num):
             _l, _m = fit(args, net, train_set, optimizer, measure, is_train=True)

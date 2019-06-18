@@ -57,10 +57,11 @@ class MixedLoss(nn.Module):
 
 
 class MultiMeasure(nn.Module):
-    def __init__(self, type="l1", reduction="mean"):
+    def __init__(self, type="l1", reduction="mean", half_precision=False):
         super().__init__()
         self.mae = ListedLoss(type=type, reduction=reduction)
         self.mse = nn.MSELoss(reduction="sum")
+        self.half_precision = half_precision
 
     def forward(self, pred, target, blended_target):
         """
@@ -75,8 +76,12 @@ class MultiMeasure(nn.Module):
                 HR_uv = target[:, :, u: u + 378, v: v + 378]
                 # mask pixel is less than this value
                 # because we normalize the image to -1 ~ 1
-                co_eff = 1 / torch.sum(HR_uv > -0.995).float()
-                b = co_eff * torch.sum((HR_uv - SR) * (HR_uv > -0.995).float())
+                if self.half_precision:
+                    co_eff = 1 / torch.sum(HR_uv > 5).float()
+                    b = co_eff * torch.sum(((HR_uv - SR) * (HR_uv > 5).half()).float())
+                else:
+                    co_eff = 1 / torch.sum(HR_uv > 5).float()
+                    b = co_eff * torch.sum((HR_uv - SR) * (HR_uv > 5).float())
                 # cmse = torch.sum((HR_uv - (SR + b)) ** 2)
                 cmse = co_eff * self.mse(HR_uv, SR + b)
                 #print(cmse)

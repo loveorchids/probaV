@@ -68,8 +68,20 @@ class CARN(nn.Module):
             return out, mae, torch.tensor([0])
 
 
+class MeanShift(nn.Conv2d):
+    def __init__(self, rgb_range, rgb_mean, rgb_std, sign=-1, channel=3):
+        super(MeanShift, self).__init__(channel, channel, kernel_size=1)
+        std = torch.Tensor([rgb_std]).repeat(channel)
+        self.weight.data = torch.eye(channel).view(channel, channel, 1, 1)
+        self.weight.data.div_(std.view(channel, 1, 1, 1))
+        self.bias.data = sign * rgb_range * torch.Tensor([rgb_mean]).repeat(channel)
+        self.bias.data.div_(std)
+        self.requires_grad = False
+
+
 class RDN(nn.Module):
-    def __init__(self, channel, rdb_number, upscale_factor, BN=nn.BatchNorm2d, s_MSE=False, filters=64, group=1, trellis=False):
+    def __init__(self, channel, rdb_number, upscale_factor, BN=nn.BatchNorm2d, s_MSE=False,
+                 filters=64, group=1, trellis=False, img_bit=8):
         super(RDN, self).__init__()
         if s_MSE:
             self.evaluator = Vgg16BN()
@@ -79,6 +91,11 @@ class RDN(nn.Module):
        #self.group_conv1 = block.conv_block(channel, [filters * group, filters * group], kernel_sizes=[3, 3],
                                            #stride=[1, 1], padding=[1, 1], groups=[group] * 2, name="block1", batch_norm=BN)
         #self.conv1 = nn.Conv2d(filters * group, out_channels=filters, kernel_size=1, padding=0, stride=1)
+        rgb_mean = 0.5
+        rgb_std = 1.0
+        self.sub_mean = MeanShift(2**img_bit, rgb_mean, rgb_std, channel=channel)
+        self.add_mean = MeanShift(2**img_bit, rgb_mean,rgb_std, sign=1, channel=1)
+
         self.SFF1 = nn.Conv2d(in_channels=channel, out_channels=filters, kernel_size=3, padding=1, stride=1)
         self.SFF2 = nn.Conv2d(in_channels=filters, out_channels=filters, kernel_size=3, padding=1, stride=1)
         self.RDB1 = RDB(nb_layers=rdb_number, input_dim=filters, growth_rate=filters)
@@ -108,8 +125,10 @@ class RDN(nn.Module):
         self.s_mse_loss = nn.MSELoss()
     
     def forward(self, x, y, train=True):
+        x = self.sub_mean(x)
         #x = self.group_conv1(x)
         #x = self.conv1(x)
+
         f_ = self.SFF1(x)
         f_0 = self.SFF2(f_)
         f_1 = self.RDB1(f_0)
@@ -129,6 +148,7 @@ class RDN(nn.Module):
         # f_conv2 = self.conv2(f_upscale)
         #results = self.trellis(f_upscale)
         #out = results[-1]
+        out = self.add_mean(out)
         if train:
             #mae = sum([self.mae(result, y) for result in results]).unsqueeze_(0)
             mae = self.mae(out, y)

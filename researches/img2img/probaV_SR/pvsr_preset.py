@@ -21,6 +21,7 @@ def GeneralPattern_01(args):
     # original image is claimed to be 14-bit, but it will be
     # converted to 16-bit during loading
     args.img_bit = 16
+    args.normalize_img = False
     args.img_bias = (0.5, 0.5, 0.5)
 
     args.finetune = False
@@ -45,6 +46,7 @@ def UniquePattern_01(args):
 def RuntimePattern(args):
     args.train = False
     args.test = False
+    args.half_precision = False
     return args
 
 

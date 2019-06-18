@@ -23,6 +23,12 @@ def parse_arguments():
     help="use trellis, only when -wm is rdn",
   )
   parser.add_argument(
+    "-hp",
+    "--half_precision",
+    action="store_true",
+    help="use half precision mode to accelerate and lower memory consumption",
+  )
+  parser.add_argument(
     "-wm",
     "--which_model",
     type=str,
