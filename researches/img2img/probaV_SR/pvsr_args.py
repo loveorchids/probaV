@@ -88,5 +88,11 @@ def parse_arguments():
       type=str,
       help="prefix of model",
   )
+  parser.add_argument(
+      "-mpf",
+      "--model_prefix_finetune",
+      type=str,
+      help="prefix of model",
+  )
   args = parser.parse_args()
   return args
