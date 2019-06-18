@@ -17,6 +17,11 @@ def parse_arguments():
     help="do test mode",
   )
   parser.add_argument(
+      "--finetune",
+      action="store_true",
+      help="do finetune",
+  )
+  parser.add_argument(
     "-tr",
     "--trellis",
     action="store_true",

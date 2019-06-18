@@ -167,7 +167,7 @@ def main():
                     multi_line_labels=[["train_mae", "train_smse", "val_mae", "val_smse"],
                                        ["train_PSNR", "train_L1", "val_PSNR", "val_L1",]],
                     save_path=args.loss_log, window=3, name=dt + "cv_%d"%(idx+1),
-                    bound=[{"low": 0.0, "high": 0.15}, None],
+                    bound=[{"low": 0.0, "high": 15}, {"low": 10, "high": 50}],
                     titles=["Loss", "Measure"]
                 )
         # Clean the data for next cross validation
