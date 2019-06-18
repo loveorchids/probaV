@@ -102,27 +102,16 @@ class RDB(nn.Module):
         return out + x
 
 
-class MeanShift(nn.Module):
-    def __init__(self, mean_rgb, sub):
-        super(MeanShift, self).__init__()
+class MeanShift(nn.Conv2d):
+    def __init__(self, rgb_range, rgb_mean, rgb_std, sign=-1, channel=3):
+        super(MeanShift, self).__init__(channel, channel, kernel_size=1)
+        std = torch.Tensor([rgb_std]).repeat(channel)
+        self.weight.data = torch.eye(channel).view(channel, channel, 1, 1)
+        self.weight.data.div_(std.view(channel, 1, 1, 1))
+        self.bias.data = sign * rgb_range * torch.Tensor([rgb_mean]).repeat(channel)
+        self.bias.data.div_(std)
+        self.requires_grad = False
         
-        sign = -1 if sub else 1
-        r = mean_rgb[0] * sign
-        g = mean_rgb[1] * sign
-        b = mean_rgb[2] * sign
-        
-        self.shifter = nn.Conv2d(3, 3, 1, 1, 0)
-        self.shifter.weight.data = torch.eye(3).view(3, 3, 1, 1)
-        self.shifter.bias.data = torch.Tensor([r, g, b])
-        
-        # Freeze the mean shift layer
-        for params in self.shifter.parameters():
-            params.requires_grad = False
-    
-    def forward(self, x):
-        x = self.shifter(x)
-        return x
-
 
 class CarnBlock(nn.Module):
     def __init__(self,

@@ -40,6 +40,7 @@ def UniquePattern_01(args):
     # should not be larger than 20 (20 is the maximum number)
     args.n_selected_img = 9
     args.filters = 64
+    args.s_MSE = False
     return args
 
 

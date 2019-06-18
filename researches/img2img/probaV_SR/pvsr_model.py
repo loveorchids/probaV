@@ -7,7 +7,7 @@ import researches.img2img.probaV_SR.pvsr_module as module
 
 
 class CARN(nn.Module):
-    def __init__(self, inchannel, filters, scale, BN=nn.BatchNorm2d, s_MSE=False, trellis=False):
+    def __init__(self, inchannel, filters, scale, BN=nn.BatchNorm2d, s_MSE=False, trellis=False, img_bit=8):
         super(CARN, self).__init__()
         self.scale = scale
         if s_MSE:
@@ -15,8 +15,10 @@ class CARN(nn.Module):
         else:
             self.evaluator = None
         self.trellis = trellis
-        self.sub_mean = module.MeanShift((0.4488, 0.4371, 0.4040), sub=True)
-        self.add_mean = module.MeanShift((0.4488, 0.4371, 0.4040), sub=False)
+        rgb_mean = 0.5
+        rgb_std = 1.0
+        self.sub_mean = module.MeanShift(2 ** img_bit, rgb_mean, rgb_std, channel=inchannel)
+        self.add_mean = module.MeanShift(2 ** img_bit, rgb_mean, rgb_std, sign=1, channel=1)
         
         self.entry = nn.Conv2d(inchannel, filters, 3, 1, 1)
         
@@ -68,17 +70,6 @@ class CARN(nn.Module):
             return out, mae, torch.tensor([0])
 
 
-class MeanShift(nn.Conv2d):
-    def __init__(self, rgb_range, rgb_mean, rgb_std, sign=-1, channel=3):
-        super(MeanShift, self).__init__(channel, channel, kernel_size=1)
-        std = torch.Tensor([rgb_std]).repeat(channel)
-        self.weight.data = torch.eye(channel).view(channel, channel, 1, 1)
-        self.weight.data.div_(std.view(channel, 1, 1, 1))
-        self.bias.data = sign * rgb_range * torch.Tensor([rgb_mean]).repeat(channel)
-        self.bias.data.div_(std)
-        self.requires_grad = False
-
-
 class RDN(nn.Module):
     def __init__(self, channel, rdb_number, upscale_factor, BN=nn.BatchNorm2d, s_MSE=False,
                  filters=64, group=1, trellis=False, img_bit=8):
@@ -93,8 +84,8 @@ class RDN(nn.Module):
         #self.conv1 = nn.Conv2d(filters * group, out_channels=filters, kernel_size=1, padding=0, stride=1)
         rgb_mean = 0.5
         rgb_std = 1.0
-        self.sub_mean = MeanShift(2**img_bit, rgb_mean, rgb_std, channel=channel)
-        self.add_mean = MeanShift(2**img_bit, rgb_mean,rgb_std, sign=1, channel=1)
+        self.sub_mean = module.MeanShift(2**img_bit, rgb_mean, rgb_std, channel=channel)
+        self.add_mean = module.MeanShift(2**img_bit, rgb_mean,rgb_std, sign=1, channel=1)
 
         self.SFF1 = nn.Conv2d(in_channels=channel, out_channels=filters, kernel_size=3, padding=1, stride=1)
         self.SFF2 = nn.Conv2d(in_channels=filters, out_channels=filters, kernel_size=3, padding=1, stride=1)

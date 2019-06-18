@@ -28,6 +28,12 @@ def parse_arguments():
     help="use trellis, only when -wm is rdn",
   )
   parser.add_argument(
+    "-smse",
+    "--s_MSE",
+    action="store_true",
+    help="use an evaluator during the train",
+  )
+  parser.add_argument(
     "-hp",
     "--half_precision",
     action="store_true",
@@ -37,7 +43,7 @@ def parse_arguments():
     "-wm",
     "--which_model",
     type=str,
-    help="choose between rdn, carn, basic",
+    help="choose between rdn, meta_rdn, carn, basic",
     default="basic"
   )
   parser.add_argument(

@@ -9,6 +9,7 @@ from omni_torch.networks.optimizer.adabound import AdaBound
 import researches.img2img.probaV_SR.pvsr_data as data
 import researches.img2img.probaV_SR.pvsr_preset as preset
 import researches.img2img.probaV_SR.pvsr_model as model
+from researches.img2img.probaV_SR.pvsr_metardn import RDN_Meta
 from researches.img2img.probaV_SR.pvsr_args import parse_arguments
 from researches.img2img.probaV_SR.pvsr_loss import *
 from researches.img2img.probaV_SR import *
@@ -127,9 +128,13 @@ def main():
         print("\n =============== Cross Validation: %s/%s ================ " %
               (idx + 1, len(datasets)))
         if args.which_model.lower() == "carn":
-            net = model.CARN(args.n_selected_img, args.filters, 3, s_MSE=True, trellis=args.trellis)
+            net = model.CARN(args.n_selected_img, args.filters, 3, s_MSE=args.s_MSE, trellis=args.trellis)
         elif args.which_model.lower() == "rdn":
-            net = model.RDN(args.n_selected_img, 3, 3, filters=args.filters, s_MSE=True, group=args.n_selected_img, trellis=args.trellis)
+            net = model.RDN(args.n_selected_img, 3, 3, filters=args.filters, s_MSE=args.s_MSE,
+                            group=args.n_selected_img, trellis=args.trellis)
+        elif args.which_model.lower() == "meta_rdn":
+            net = RDN_Meta(args.n_selected_img, filters=args.filters, scale=3, s_MSE=args.s_MSE,
+                           group=args.n_selected_img, trellis=args.trellis)
         elif args.which_model.lower() == "basic":
             net = model.ProbaV_basic(inchannel=args.n_selected_img)
         else:
