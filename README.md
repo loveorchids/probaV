@@ -64,7 +64,7 @@ exciting augmentation functions to make it better. If there is any error related
 3. If there is any error related to **Matplotlib**, this usually happens when you have completed the training
  for several epoches. If such an error happens, this may related to your settings or tkinter installation. 
  You can search the errors on Google to find a solution to this.
-4. Right now I'm trying to use Auto Machine Learning to solve the problem, to re-produce the result in the Result Section, please revert the to ```git checkout df7d8574b2c54301cec658cae9cb7b56b14e18aa```.
+4. Right now I'm trying to use Auto Machine Learning [11] to solve the problem, to re-produce the result in the Result Section, please revert the to ```git checkout df7d8574b2c54301cec658cae9cb7b56b14e18aa```.
 
 ### Report Content
 - <a href='#Code-arrange'>Code Arrange</a>
@@ -230,7 +230,7 @@ which prevent the result from being optimized.
 current version of PyTorch usually tends to achieve sub-optimal result when compared to Tensorflow. 
 I have also did an experiment about optimizing a model for cifar-10 tasks using a keras implementation
 and a PyTorch implementation. (see omni_torch/examples/test).
-3. **NAS [10] for hyper-parameter tuning**<br>
+3. **NAS [10, 11] for hyper-parameter tuning**<br>
 Recently, "Learning to Learn" became a hot idea which combine the concept of Reinforcement Learning into tuning
 the neural network structure. Support NAS for hyper-parameter tuning is also the goal for omni-torch.
 
@@ -258,3 +258,5 @@ arXiv preprint arXiv:1903.05784 (2019).[link](https://arxiv.org/pdf/1903.05784.p
 preprint arXiv:1902.09843 (2019). [link](https://arxiv.org/abs/1902.09843.pdf)<br>
 [10] Zoph, Barret, and Quoc V. Le. "Neural architecture search with reinforcement learning." arXiv 
 preprint arXiv:1611.01578 (2016). [link](https://arxiv.org/abs/1611.01578)
+[11] Hu, Xuecai, et al. "Meta-SR: A Magnification-Arbitrary Network for Super-Resolution." arXiv 
+preprint arXiv:1903.00875 (2019). [link](https://arxiv.org/pdf/1903.00875.pdf)
