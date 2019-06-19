@@ -1,5 +1,6 @@
 # ProbaV
-contest code for proba-V super resolution.
+Contest code for proba-V super resolution.
+NOTICE: The latest code CANNOT re-produce the result in the Result Section, please revert the to ```git checkout df7d8574b2c54301cec658cae9cb7b56b14e18aa```
 
 ## Installation
 How to clone this repo:
@@ -236,27 +237,27 @@ the neural network structure. Support NAS for hyper-parameter tuning is also the
 
 ## Reference
 [1] Zhang, Zhifei, et al. "Image Super-Resolution by Neural Texture Transfer." arXiv preprint arXiv:
-1903.00834 (2019).[link](https://arxiv.org/pdf/1903.00834.pdf)<br />
+1903.00834 (2019). [link](https://arxiv.org/pdf/1903.00834.pdf)<br />
 [2] Zheng, Haitian, et al. "CrossNet: An End-to-end Reference-based Super Resolution Network using 
 Cross-scale Warping." Proceedings of the European Conference on Computer Vision (ECCV). 2018.
 [link](https://arxiv.org/pdf/1807.10547.pdf)<br />
 [3] Zhang, Yulun, et al. "Residual dense network for image super-resolution." Proceedings of the IEEE 
-Conference on Computer Vision and Pattern Recognition. 2018.[link](https://arxiv.org/pdf/1802.08797.pdf)<br />
+Conference on Computer Vision and Pattern Recognition. 2018. [link](https://arxiv.org/pdf/1802.08797.pdf)<br />
 [4] Ahn, Namhyuk, Byungkon Kang, and Kyung-Ah Sohn. "Fast, accurate, and lightweight super-resolution 
 with cascading residual network." Proceedings of the European Conference on Computer Vision (ECCV). 
-2018.[link](https://arxiv.org/pdf/1803.08664.pdf)<br />
+2018. [link](https://arxiv.org/pdf/1803.08664.pdf)<br />
 [5] Jiang, Xiaolong, et al. "Crowd Counting and Density Estimation by Trellis Encoder-Decoder Network." 
-arXiv preprint arXiv:1903.00853 (2019).[link](https://arxiv.org/pdf/1903.00853.pdf)<br />
+arXiv preprint arXiv:1903.00853 (2019). [link](https://arxiv.org/pdf/1903.00853.pdf)<br />
 [6] Jeon, Daniel S., et al. "Enhancing the spatial resolution of stereo images using a parallax prior." 
 Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2018.
 [link](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jeon_Enhancing_the_Spatial_CVPR_2018_paper.pdf)<br />
 [7] Wang, Longguang, et al. "Learning parallax attention for stereo image super-resolution." 
-arXiv preprint arXiv:1903.05784 (2019).[link](https://arxiv.org/pdf/1903.05784.pdf)<br />
+arXiv preprint arXiv:1903.05784 (2019). [link](https://arxiv.org/pdf/1903.05784.pdf)<br />
 [8] Zhang, Han, et al. "Self-attention generative adversarial networks." arXiv preprint arXiv:1805.08318 
 (2018). [link](https://arxiv.org/pdf/1805.08318.pdf) <br>
 [9] Luo, Liangchen, et al. "Adaptive gradient methods with dynamic bound of learning rate." arXiv 
 preprint arXiv:1902.09843 (2019). [link](https://arxiv.org/abs/1902.09843.pdf)<br>
 [10] Zoph, Barret, and Quoc V. Le. "Neural architecture search with reinforcement learning." arXiv 
-preprint arXiv:1611.01578 (2016). [link](https://arxiv.org/abs/1611.01578)
+preprint arXiv:1611.01578 (2016). [link](https://arxiv.org/abs/1611.01578.pdf)
 [11] Hu, Xuecai, et al. "Meta-SR: A Magnification-Arbitrary Network for Super-Resolution." arXiv 
 preprint arXiv:1903.00875 (2019). [link](https://arxiv.org/pdf/1903.00875.pdf)
