@@ -64,6 +64,7 @@ exciting augmentation functions to make it better. If there is any error related
 3. If there is any error related to **Matplotlib**, this usually happens when you have completed the training
  for several epoches. If such an error happens, this may related to your settings or tkinter installation. 
  You can search the errors on Google to find a solution to this.
+4. Right now I'm trying to use Auto Machine Learning to solve the problem, to re-produce the result in the Result Section, please revert the to ```git checkout df7d8574b2c54301cec658cae9cb7b56b14e18aa```.
 
 ### Report Content
 - <a href='#Code-arrange'>Code Arrange</a>
